@@ -130,8 +130,6 @@ Visualization Manager:
       Yaw: 0.435437
     Saved: ~
 Window Geometry:
-  Camera:
-    collapsed: false
   Displays:
     collapsed: false
   Height: 846
@@ -147,8 +145,8 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1608
-  X: 145
-  Y: 43
+  X: 151
+  Y: 55
   depth_image:
     collapsed: false
   gray_image:
