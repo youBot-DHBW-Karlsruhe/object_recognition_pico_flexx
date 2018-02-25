@@ -14,16 +14,8 @@ roslib.load_manifest('object_recognition_pico_flexx')
 class ObjectLearner:
 
     def __init__(self):
-        self.image_sub = rospy.Subscriber("/royale_camera_driver/depth_image", Image, self.callback)
+        self.image_sub = rospy.Subscriber("/royale_camera_driver/depth_image", Image, self.learn_object)
         self.cv_bridge = CvBridge()
-        self.running = False
-
-    def callback(self, img_msg):
-        # Prevent running multiple callbacks at once
-        if not self.running:
-            self.running = True
-            self.learn_object(img_msg)
-            self.running = False
 
     def learn_object(self, img_msg):
 
@@ -36,7 +28,9 @@ class ObjectLearner:
 
             image_show = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
             # drawContours(image, contours, contourIdx, color, thickness)
-            cv2.drawContours(image_show, sorted_contours, -1, (0, 255, 255), 3)
+            cv2.drawContours(image_show, sorted_contours, 0, (255, 0, 0), 3)
+            cv2.drawContours(image_show, sorted_contours, 1, (0, 255, 0), 3)
+            cv2.drawContours(image_show, sorted_contours, 2, (0, 0, 255), 3)
             helper.show_image(image_show)
 
             pressed_key = cv2.waitKey(1)
