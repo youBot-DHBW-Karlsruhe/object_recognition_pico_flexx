@@ -1,5 +1,6 @@
-import cv2
 import numpy as np
+
+import cv2
 
 
 def get_object_rotation_in_scene(image_object, image_scene, show=False):
@@ -58,13 +59,23 @@ def get_contour_line_on_image(contour, image):
 
 
 def find_contours(image, show=False):
-    # Prepare image
-    gradient = cv2.morphologyEx(image, cv2.MORPH_GRADIENT, cv2.getStructuringElement(cv2.MORPH_CROSS, (5, 5)))
-    if show:
-        show_image_wait(gradient)
+    # Only look at the interesting brightness values
+    prepared_image = adjust_gamma(image, val_min=40, val_max=60)
+    # Only pay attention to objects nearer/darker than ... Else --> 0 (ignore, is ground)
+    # Delete objects further away than ...
+    ret, prepared_image = cv2.threshold(prepared_image, ((54 - 40) * 255) / (60 - 40), 0, cv2.THRESH_TOZERO_INV)
+    # Remove noise
+    prepared_image = cv2.morphologyEx(prepared_image, cv2.MORPH_OPEN,
+                                      cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5)))
+    show_image(prepared_image, "Prepared Image")
+
+    # Prepare image edges
+    # edges = cv2.morphologyEx(image, cv2.MORPH_GRADIENT, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5)))
+    # if show:
+    #     show_image(edges, "Edges")
 
     # Find Contours
-    contours = cv2.findContours(gradient, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0]
+    contours = cv2.findContours(prepared_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0]
     # Sort Contours by their number of points
     contours.sort(key=len, reverse=True)
 
@@ -73,22 +84,43 @@ def find_contours(image, show=False):
         image_show = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
         # drawContours(image, contours, contourIdx, color, thickness)
         cv2.drawContours(image_show, contours, -1, (0, 255, 255), 3)
-        show_image_wait(image_show)
+        show_image(image_show, "Found Contours")
     return contours
 
 
-def show_image_wait(image):
-    show_image(image)
+def adjust_gamma(image, val_min=60, val_max=100):
+    # build a lookup table mapping the pixel values [0, 255] to
+    # their adjusted gamma values
 
+    table = []
+    for i in range(256):
+        value = ((i - val_min) * 255) / (val_max - val_min)
+        if i < 30:
+            value = ((50 - val_min) * 255) / (val_max - val_min)
+        if value <= 0:
+            value = 0
+        if value > 255:
+            value = 255
+        table.append(value)
+    table = np.array(table).astype("uint8")
+
+    # apply gamma correction using the lookup table
+    return cv2.LUT(image, table)
+
+
+def show_image_wait(image, window_name="Stream"):
     while True:
-        if cv2.waitKey(1) == 27:  # 27 = Escape key
+        show_image(image, window_name)
+        pressed_key = cv2.waitKey(1000)
+        print(pressed_key)
+        if pressed_key != -1:  # Button pressed
             break
 
 
-def show_image(image):
-    cv2.namedWindow("Stream", cv2.WINDOW_NORMAL)
-    cv2.resizeWindow('Stream', image.shape[1] * 4, image.shape[0] * 4)
-    cv2.imshow("Stream", image)  # Show image
+def show_image(image, window_name="Stream"):
+    cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+    cv2.resizeWindow(window_name, image.shape[1] * 4, image.shape[0] * 4)
+    cv2.imshow(window_name, image)  # Show image
 
 
 if __name__ == "__main__":
