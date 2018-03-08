@@ -1,0 +1,9 @@
+<launch>
+
+  <!-- Launch Pico Flexx driver -->
+  <include file="$(find royale_in_ros)/launch/camera_driver.launch" />
+
+  <!-- Set Camera Use Case -->
+  <node name="dynamic_reconfigure_load" pkg="dynamic_reconfigure" type="dynparam" args="load /royale_camera $(find object_recognition_pico_flexx)/parameters/pico_flexx_parameters.yaml" />
+
+</launch>
