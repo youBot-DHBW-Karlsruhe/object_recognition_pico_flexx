@@ -76,16 +76,23 @@ def find_contours(image, show=False):
 
     # Find Contours
     contours = cv2.findContours(prepared_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0]
-    # Sort Contours by their number of points
-    contours.sort(key=len, reverse=True)
+
+    # Get useful contours
+    useful_contours = []
+    corners = [(0, 0), (0, image.shape[0] - 0), (image.shape[0] - 0, 0), (image.shape[0] - 0, image.shape[0] - 0)]
+    for contour in contours:
+        if len(contour) > 50:
+            for point in corners:
+                if cv2.pointPolygonTest(contour, point, True) < 0:
+                    useful_contours.append(contour)
 
     # Show found contours
     if show:
         image_show = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
         # drawContours(image, contours, contourIdx, color, thickness)
-        cv2.drawContours(image_show, contours, -1, (0, 255, 255), 3)
+        cv2.drawContours(image_show, useful_contours, -1, (0, 255, 255), 1)
         show_image(image_show, "Found Contours")
-    return contours
+    return useful_contours
 
 
 def adjust_gamma(image, val_min=60, val_max=100):
