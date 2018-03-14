@@ -10,14 +10,14 @@ from cv_bridge import CvBridge, CvBridgeError
 
 roslib.load_manifest('object_recognition_pico_flexx')
 
-
+# http://wiki.ros.org/ROS/Tutorials/WritingPublisherSubscriber%28python%29
 class ObjectRecognizer:
 
     def __init__(self):
         self.image_sub = rospy.Subscriber("/royale_camera_driver/depth_image", Image, self.recognize_objects)
         self.cv_bridge = CvBridge()
 
-        self.pub = rospy.Publisher('/recognized_objects', String, queue_size=10)
+        # self.pub = rospy.Publisher('/recognized_objects', String, queue_size=10)
         self.image_pub = rospy.Publisher("object_recognizer_visualization", Image, queue_size=10)
 
     def recognize_objects(self, img_msg):
@@ -42,12 +42,12 @@ class ObjectRecognizer:
         # rospy.loginfo(hello_str)
         # self.pub.publish(hello_str)
 
-        return recognized_objects
+        # TODO: publish recognized_objects
 
 
 def main():
     ObjectRecognizer()
-    rospy.init_node('image_converter', anonymous=True)
+    rospy.init_node('object_recognizer', anonymous=True)
     try:
         rospy.spin()
     except KeyboardInterrupt:
