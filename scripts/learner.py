@@ -34,7 +34,7 @@ class ObjectLearner:
             cv_image = self.cv_bridge.imgmsg_to_cv2(img_msg, "32FC1")
             # Convert 32fc1 to 8uc1 (Gray scale)
             image = (cv_image * 255).astype('u1')
-            helper.show_image(image, "Origin")
+            # helper.show_image(image, "Origin")
 
             sorted_contours = helper.find_contours(image, True)
 

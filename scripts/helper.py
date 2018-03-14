@@ -77,16 +77,17 @@ def find_contours(image, show=False):
     # Find Contours
     contours = cv2.findContours(prepared_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0]
 
-    # Get useful contours
+    # Filter useful contours
     useful_contours = []
     corners = [(0, 0), (0, image.shape[0] - 0), (image.shape[0] - 0, 0), (image.shape[0] - 0, image.shape[0] - 0)]
     for contour in contours:
-        if len(contour) > 50:
+        # Only select contours with more than 40 points
+        if len(contour) > 40:
             for point in corners:
                 if cv2.pointPolygonTest(contour, point, True) < 0:
                     useful_contours.append(contour)
 
-    # Show found contours
+    # Show useful contours
     if show:
         image_show = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
         # drawContours(image, contours, contourIdx, color, thickness)
