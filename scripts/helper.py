@@ -63,7 +63,7 @@ def find_contours(image, show=False):
     prepared_image = adjust_gamma(image, val_min=40, val_max=60)
     # Only pay attention to objects nearer/darker than ... Else --> 0 (ignore, is ground)
     # Delete objects further away than ...
-    ret, prepared_image = cv2.threshold(prepared_image, ((54 - 40) * 255) / (60 - 40), 0, cv2.THRESH_TOZERO_INV)
+    ret, prepared_image = cv2.threshold(prepared_image, ((55 - 40) * 255) / (60 - 40), 0, cv2.THRESH_TOZERO_INV)
     # Remove noise
     prepared_image = cv2.morphologyEx(prepared_image, cv2.MORPH_OPEN,
                                       cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5)))
