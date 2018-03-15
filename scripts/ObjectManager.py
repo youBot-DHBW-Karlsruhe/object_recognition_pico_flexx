@@ -5,7 +5,8 @@ import os
 class ObjectManager:
 
     def __init__(self, file_path):
-        self.file_path = file_path
+        # Converting relative file path to absolute file path
+        self.file_path = os.path.join(os.path.dirname(__file__), file_path)
 
     def save(self, object_to_save):
         object_list = self.load_objects()
