@@ -8,13 +8,21 @@ class ObjectManager:
         # Converting relative file path to absolute file path
         self.file_path = os.path.join(os.path.dirname(__file__), file_path)
 
-    def save(self, object_to_save):
-        object_list = self.load_objects()
+    def save(self, name, object_contour, object_angle, object_center):
+        # Create JSON object
+        object_to_save = {
+            "name": name,
+            "contour": object_contour.tolist(),
+            "angle": object_angle,
+            "center": object_center
+        }
 
-        # append object
+        # Load existent objects
+        object_list = self.load_objects()
+        # Append object
         object_list.append(object_to_save)
 
-        # save list of objects
+        # Save list of objects
         outfile = open(self.file_path, 'w+')
         json.dump(object_list, outfile)
 

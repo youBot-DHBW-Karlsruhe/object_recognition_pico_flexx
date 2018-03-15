@@ -114,13 +114,7 @@ class ObjectLearner:
     def save_object(self):
         name = raw_input("Please enter a name for the object...")
         rospy.loginfo("Saving object under name '" + name + "'...")
-        object_to_save = {
-            "name": name,
-            "contour": self.object_contour.tolist(),
-            "angle": self.object_angle,
-            "center": self.object_center
-        }
-        self.object_manager.save(object_to_save)
+        self.object_manager.save(name, self.object_contour, self.object_angle, self.object_center)
 
         self.state = "start"
 
