@@ -91,6 +91,9 @@ def get_contours(image, show=False):
             if not in_corner:
                 useful_contours.append(contour)
 
+    # Sort useful contours by their number of points
+    useful_contours.sort(key=len, reverse=True)
+
     # Show useful contours
     if show:
         image_show = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
