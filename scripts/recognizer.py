@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 from __future__ import print_function
 
+import time
+
 import roslib
 import rospy
 import cv2
 from std_msgs.msg import String
 from sensor_msgs.msg import Image
-from cv_bridge import CvBridge, CvBridgeError
+from cv_bridge import CvBridge
 
 roslib.load_manifest('object_recognition_pico_flexx')
 
@@ -14,14 +16,21 @@ roslib.load_manifest('object_recognition_pico_flexx')
 class ObjectRecognizer:
 
     def __init__(self):
-        self.image_sub = rospy.Subscriber("/royale_camera_driver/depth_image", Image, self.recognize_objects)
+        self.image_sub = rospy.Subscriber("/royale_camera_driver/depth_image", Image, self.callback)
         self.cv_bridge = CvBridge()
+
+        self.timestamp_last_call = time.time()
 
         # self.pub = rospy.Publisher('/recognized_objects', String, queue_size=10)
         self.image_pub = rospy.Publisher("object_recognizer_visualization", Image, queue_size=10)
 
+    def callback(self, img_msg):
+        # Prevent running multiple callbacks at once
+        if time.time() > self.timestamp_last_call + 1:
+            self.timestamp_last_call = time.time()
+            self.recognize_objects(img_msg)
+
     def recognize_objects(self, img_msg):
-        recognized_objects = []
 
         try:
             cv_image = self.cv_bridge.imgmsg_to_cv2(img_msg, "32FC1")
@@ -35,8 +44,6 @@ class ObjectRecognizer:
 
             self.image_pub.publish(self.cv_bridge.cv2_to_imgmsg(cv_image, "32FC1"))
 
-        except CvBridgeError as e:
-            print(e)
         #
         # hello_str = "hello world %s" % rospy.get_time()
         # rospy.loginfo(hello_str)
