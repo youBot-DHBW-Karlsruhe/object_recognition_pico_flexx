@@ -4,8 +4,8 @@ import cv2
 
 
 def get_object_rotation_in_scene(image_object, image_scene, show=False):
-    contours_scene = find_contours(image_scene, show)
-    contour_object = find_contours(image_object, show)[0]
+    contours_scene = get_contours(image_scene, show)
+    contour_object = get_contours(image_object, show)[0]
 
     angle_object = get_contour_angle_on_image(contour_object, image_object, False)
 
@@ -58,7 +58,7 @@ def get_contour_line_on_image(contour, image):
     return x1, y1, x2, y2
 
 
-def find_contours(image, show=False):
+def get_contours(image, show=False):
     # Only look at the interesting brightness values
     prepared_image = adjust_gamma(image, val_min=40, val_max=60)
     # Only pay attention to objects nearer/darker than ... Else --> 0 (ignore, is ground)
@@ -79,20 +79,26 @@ def find_contours(image, show=False):
 
     # Filter useful contours
     useful_contours = []
-    corners = [(0, 0), (0, image.shape[0] - 0), (image.shape[0] - 0, 0), (image.shape[0] - 0, image.shape[0] - 0)]
+    corners = [(2, 2), (2, image.shape[0] - 3), (image.shape[1] - 3, 2), (image.shape[1] - 3, image.shape[0] - 3)]
     for contour in contours:
         # Only select contours with more than 40 points
-        if len(contour) > 40:
+        if len(contour) > 50:
+            in_corner = False
+            # Test if Contour is in one of the corners
             for point in corners:
-                if cv2.pointPolygonTest(contour, point, True) < 0:
-                    useful_contours.append(contour)
+                if cv2.pointPolygonTest(contour, point, False) == 1:
+                    in_corner = True
+            if not in_corner:
+                useful_contours.append(contour)
 
     # Show useful contours
     if show:
         image_show = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
         # drawContours(image, contours, contourIdx, color, thickness)
         cv2.drawContours(image_show, useful_contours, -1, (0, 255, 255), 1)
-        show_image(image_show, "Found Contours")
+        for corner in corners:
+            cv2.circle(image_show, corner, 1, color=(255, 0, 0), thickness=1)
+        show_image(image_show, "Useful Contours")
     return useful_contours
 
 
