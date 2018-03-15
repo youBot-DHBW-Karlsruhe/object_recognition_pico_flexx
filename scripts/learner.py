@@ -36,16 +36,14 @@ class ObjectLearner:
             image = (cv_image * 255).astype('u1')
             # helper.show_image(image, "Origin")
 
-            sorted_contours = helper.find_contours(image, True)
+            contours = helper.get_contours(image, True)
 
             image_show = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
-            # drawContours(image, contours, contourIdx, color, thickness)
-            cv2.drawContours(image_show, sorted_contours, 0, (255, 0, 0), 1)
-            cv2.drawContours(image_show, sorted_contours, 1, (0, 255, 0), 1)
-            cv2.drawContours(image_show, sorted_contours, 2, (0, 0, 255), 1)
-            cv2.drawContours(image_show, sorted_contours, 3, (255, 255, 0), 1)
-            cv2.drawContours(image_show, sorted_contours, 4, (0, 255, 255), 1)
-            cv2.drawContours(image_show, sorted_contours, 5, (255, 0, 255), 1)
+            colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (0, 255, 255), (255, 0, 255)]
+            for index, contour in enumerate(contours):
+                if index < 5:
+                    # drawContours(image, contours, contourIdx, color, thickness)
+                    cv2.drawContours(image_show, contours, index, colors[index], 1)
             helper.show_image(image_show, "Learner")
 
             pressed_key = cv2.waitKey(500) & 255
