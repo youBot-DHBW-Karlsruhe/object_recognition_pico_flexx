@@ -24,7 +24,7 @@ class ObjectManager:
         try:
             json_file = open(self.file_path)
             object_list = json.load(json_file)
-        except EnvironmentError:
+        except (EnvironmentError, ValueError):
             if not os.path.exists(directory):
                 os.makedirs(directory)
             object_list = []
