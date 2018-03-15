@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 
 
-def find_best_matching_contour(contour_object, contours_scene, image_scene, show=False):
+def find_best_matching_contour(contour_object, contours_scene):
     smallest_difference = 1
     index_best = None
 
@@ -13,25 +13,29 @@ def find_best_matching_contour(contour_object, contours_scene, image_scene, show
             smallest_difference = difference
             index_best = index
 
-    angle_in_scene = get_contour_angle_on_image(contours_scene[index_best], image_scene, show)
-
-    return index_best, smallest_difference, angle_in_scene
+    return index_best, smallest_difference
 
 
-def get_contour_angle_on_image(contour, image, show=False):
+def get_center_on_image(contour, image, drawing_color=None):
+    M = cv2.moments(contour)
+    cx = int(M['m10'] / M['m00'])
+    cy = int(M['m01'] / M['m00'])
+
+    if drawing_color is not None:
+        cv2.circle(image, (cx, cy), 1, drawing_color)
+
+    return cx, cy
+
+
+def get_contour_angle_on_image(contour, image, drawing_color=None):
     x1, y1, x2, y2 = get_contour_line_on_image(contour, image)
     angle_rad = np.arctan((y2 - y1) / (x2 - x1))
     angle_deg = angle_rad * 180 / np.pi + 90
 
-    if show:
-        draw_line(image, x1, y1, x2, y2)
+    if drawing_color is not None:
+        cv2.line(image, (x1, y1), (x2, y2), drawing_color)
 
     return angle_deg
-
-
-def draw_line(image, x1, y1, x2, y2):
-    cv2.line(image, (x1, y1), (x2, y2), (0, 255, 0))
-    show_image(image)
 
 
 def get_contour_line_on_image(contour, image):

@@ -25,9 +25,9 @@ class ObjectLearner:
         self.state = "start"
         self.pressed_key = -1
 
-        self.colors = {"blue": (255, 0, 0), "green": (0, 255, 0), "red": (0, 0, 255), "yellow": (0, 255, 255)}
+        self.colors = {"blue": (255, 0, 0), "pink": (255, 0, 255), "red": (0, 0, 255), "yellow": (0, 255, 255)}
 
-        self.tracking_color = None
+        self.tracking_color = (0, 255, 0)  # green
         self.tracking_contour = None
 
     def callback(self, img_msg):
@@ -85,19 +85,21 @@ class ObjectLearner:
                 if self.pressed_key == ord(self.colors.keys()[index][0]):
                     rospy.loginfo(
                         "Tracking the " + self.colors.keys()[index] + " object. Do you want to save it? (y/n)")
-                    self.tracking_color = self.colors.values()[index]
                     self.tracking_contour = contour
                     self.state = "track_object"
 
     def track_object(self, contours, image_show):
-        index, difference, angle = helper.find_best_matching_contour(self.tracking_contour, contours, image_show, True)
+        index, difference = helper.find_best_matching_contour(self.tracking_contour, contours)
 
-        # Show best result
-        print("Contour Length:", len(contours[index]))
-        print("Matching:", difference)
-        print("Angle in scene", angle)
+        if index is not None:
+            # Show best result
+            # print("Contour Length:", len(contours[index]))
+            # print("Matching:", difference)
+            # print("Angle in scene", angle)
 
-        cv2.drawContours(image_show, contours, index, self.tracking_color, 1)
+            cv2.drawContours(image_show, contours, index, self.tracking_color, 1)
+            angle = helper.get_contour_angle_on_image(contours[index], image_show, self.tracking_color)
+            center = helper.get_center_on_image(contours[index], image_show, self.colors["red"])
 
         helper.show_image(image_show, "Learner")
         self.pressed_key = cv2.waitKey(500) & 255
