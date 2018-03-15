@@ -27,9 +27,6 @@ class ObjectLearner:
         self.state = "start"
         self.pressed_key = -1
 
-        self.colors = {"blue": (255, 0, 0), "pink": (255, 0, 255), "red": (0, 0, 255), "yellow": (0, 255, 255)}
-        self.tracking_color = (0, 255, 0)  # green
-
         self.object_contour = None
         self.object_angle = None
         self.object_center = None
@@ -43,8 +40,8 @@ class ObjectLearner:
         # print("Ignored")
 
     def learn_objects(self, img_msg):
-        image, image_rgb = helper.convert_img_msg(self.cv_bridge, img_msg)
-        contours = helper.get_contours(image, False)
+        image_bw, image_rgb = helper.convert_img_msg(self.cv_bridge, img_msg)
+        contours = helper.get_contours(image_bw, False)
 
         if self.state == "start":
             self.start()
@@ -68,23 +65,23 @@ class ObjectLearner:
     def start(self):
         rospy.loginfo("Press any of the following buttons to save the respective object:")
         rospy.loginfo(
-            " ".join(["'" + color_name[0] + "'" + " for " + color_name + ";" for color_name in self.colors.keys()]))
+            " ".join(["'" + color_name[0] + "'" + " for " + color_name + ";" for color_name in helper.colors.keys()]))
         self.state = "find_objects"
 
     def find_objects(self, contours, image_show):
 
         for index, contour in enumerate(contours):
-            if index < len(self.colors):
+            if index < len(helper.colors):
                 # drawContours(image, contours, contourIdx, color, thickness)
-                cv2.drawContours(image_show, contours, index, self.colors.values()[index], 1)
+                cv2.drawContours(image_show, contours, index, helper.colors.values()[index], 1)
         helper.show_image(image_show, "Learner")
 
         self.pressed_key = cv2.waitKey(500) & 255
         for index, contour in enumerate(contours):
-            if index < len(self.colors):
-                if self.pressed_key == ord(self.colors.keys()[index][0]):
+            if index < len(helper.colors):
+                if self.pressed_key == ord(helper.colors.keys()[index][0]):
                     rospy.loginfo(
-                        "Tracking the " + self.colors.keys()[index] + " object. Do you want to save it? (y/n)")
+                        "Tracking the " + helper.colors.keys()[index] + " object. Do you want to save it? (y/n)")
                     self.object_contour = contour
                     self.object_angle = helper.get_contour_angle_on_image(contours[index], image_show, None)
                     self.object_center = helper.get_center_on_image(contours[index], image_show, None)
@@ -98,9 +95,9 @@ class ObjectLearner:
             # print("Contour Length:", len(contours[index]))
             print("Difference:", difference)
 
-            cv2.drawContours(image_show, contours, index, self.tracking_color, 1)
-            angle = helper.get_contour_angle_on_image(contours[index], image_show, self.tracking_color)
-            helper.get_center_on_image(contours[index], image_show, self.colors["red"])
+            cv2.drawContours(image_show, contours, index, helper.colors["green"], 1)
+            angle = helper.get_contour_angle_on_image(contours[index], image_show, helper.colors["green"])
+            helper.get_center_on_image(contours[index], image_show, helper.colors["red"])
 
             # print("Angle in scene", angle)
 
