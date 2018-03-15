@@ -1,4 +1,5 @@
 import json
+import numpy as np
 import os
 
 
@@ -18,7 +19,7 @@ class ObjectManager:
         }
 
         # Load existent objects
-        object_list = self.load_objects()
+        object_list = self.load_json()
         # Append object
         object_list.append(object_to_save)
 
@@ -26,7 +27,7 @@ class ObjectManager:
         outfile = open(self.file_path, 'w+')
         json.dump(object_list, outfile)
 
-    def load_objects(self):
+    def load_json(self):
         directory = os.path.dirname(self.file_path)
 
         # load list of saved objects
@@ -37,5 +38,14 @@ class ObjectManager:
             if not os.path.exists(directory):
                 os.makedirs(directory)
             object_list = []
+
+        return object_list
+
+    def load_objects(self):
+        # Load existent objects
+        object_list = self.load_json()
+
+        for obj in object_list:
+            obj["contour"] = np.array(obj["contour"])
 
         return object_list
