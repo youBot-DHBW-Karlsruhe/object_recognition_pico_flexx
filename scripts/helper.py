@@ -2,9 +2,11 @@ import numpy as np
 
 import cv2
 
+colors = {"blue": (255, 0, 0), "green": (0, 255, 0), "red": (0, 0, 255), "yellow": (0, 255, 255), "pink": (255, 0, 255)}
+
 
 def find_best_matching_contour(contour_object, contours_scene):
-    smallest_difference = 0.4
+    smallest_difference = 0.2
     index_best = None
 
     for index, contour_scene in enumerate(contours_scene):
@@ -73,7 +75,8 @@ def get_contours(image, show=False):
 
     # Filter useful contours
     useful_contours = []
-    corners = [(2, 2), (2, image.shape[0] - 3), (image.shape[1] - 3, 2), (image.shape[1] - 3, image.shape[0] - 3)]
+    corners = [(2, 2), (2, image.shape[0] - 3), (image.shape[1] - 3, 2), (image.shape[1] - 3, image.shape[0] - 3),
+               (image.shape[1] - 3, (image.shape[0] - 3)/2)]
     for contour in contours:
         # Only select contours with more than 40 points
         if len(contour) > 50:
