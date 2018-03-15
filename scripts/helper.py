@@ -4,7 +4,7 @@ import cv2
 
 
 def find_best_matching_contour(contour_object, contours_scene):
-    smallest_difference = 1
+    smallest_difference = 0.4
     index_best = None
 
     for index, contour_scene in enumerate(contours_scene):
