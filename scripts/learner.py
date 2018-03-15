@@ -43,21 +43,17 @@ class ObjectLearner:
         # print("Ignored")
 
     def learn_objects(self, img_msg):
-        cv_image = self.cv_bridge.imgmsg_to_cv2(img_msg, "32FC1")
-        # Convert 32fc1 to 8uc1 (Gray scale)
-        image = (cv_image * 255).astype('u1')
-        # helper.show_image(image, "Origin")
+        image, image_rgb = helper.convert_img_msg(self.cv_bridge, img_msg)
         contours = helper.get_contours(image, False)
-        image_show = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
 
         if self.state == "start":
             self.start()
 
-        if self.state == "find_objects":
-            self.find_objects(contours, image_show)
+        elif self.state == "find_objects":
+            self.find_objects(contours, image_rgb)
 
         elif self.state == "track_object":
-            self.track_object(contours, image_show)
+            self.track_object(contours, image_rgb)
 
         elif self.state == "save_object":
             self.save_object()

@@ -118,6 +118,14 @@ def adjust_gamma(image, val_min=60, val_max=100):
     # apply gamma correction using the lookup table
     return cv2.LUT(image, table)
 
+def convert_img_msg(cv_bridge, img_msg):
+    cv_image = cv_bridge.imgmsg_to_cv2(img_msg, "32FC1")
+    # Convert 32fc1 to 8uc1 (Gray scale)
+    image = (cv_image * 255).astype('u1')
+    # helper.show_image(image, "Origin")
+    image_rgb = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+    return image, image_rgb
+
 
 def show_image_wait(image, window_name="Stream"):
     while True:
