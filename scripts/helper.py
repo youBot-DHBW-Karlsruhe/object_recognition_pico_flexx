@@ -3,51 +3,40 @@ import numpy as np
 import cv2
 
 
-def get_object_rotation_in_scene(image_object, image_scene, show=False):
-    contours_scene = get_contours(image_scene, show)
-    contour_object = get_contours(image_object, show)[0]
+def find_best_matching_contour(contour_object, contours_scene, image_scene, show=False):
+    smallest_difference = 1
+    index_best = None
 
-    angle_object = get_contour_angle_on_image(contour_object, image_object, False)
+    for index, contour_scene in enumerate(contours_scene):
+        difference = cv2.matchShapes(contour_scene, contour_object, 1, 0.0)
+        if difference < smallest_difference:
+            smallest_difference = difference
+            index_best = index
 
-    matching_ranking = {}
-    for index in range(len(contours_scene)):
-        contour_scene = contours_scene[index]
-        if len(contour_scene) > 200:
-            matching = cv2.matchShapes(contour_scene, contour_object, 1, 0.0)
-            if matching < 0.7:
-                matching_ranking[index] = matching
+    angle_in_scene = get_contour_angle_on_image(contours_scene[index_best], image_scene, show)
 
-    # Get contour with best matching
-    index = min(matching_ranking, key=matching_ranking.get)
-    contour_scene = contours_scene[index]
-
-    # Show best result
-    print("Contour Length:", len(contour_scene))
-    print("Matching:", matching_ranking[index])
-    cv2.drawContours(image_scene, contours_scene, index, (0, 255, 255), 3)
-    angle_in_scene = get_contour_angle_on_image(contour_scene, image_scene, True)
-    print("Angle difference", angle_in_scene - angle_object)
+    return index_best, smallest_difference, angle_in_scene
 
 
-def get_contour_angle_on_image(contour, image, show_line=False):
+def get_contour_angle_on_image(contour, image, show=False):
     x1, y1, x2, y2 = get_contour_line_on_image(contour, image)
     angle_rad = np.arctan((y2 - y1) / (x2 - x1))
     angle_deg = angle_rad * 180 / np.pi + 90
 
-    if show_line:
+    if show:
         draw_line(image, x1, y1, x2, y2)
 
     return angle_deg
 
 
 def draw_line(image, x1, y1, x2, y2):
-    cv2.line(image, (x1, y1), (x2, y2), (0, 255, 0), 2)
-    show_image_wait(image)
+    cv2.line(image, (x1, y1), (x2, y2), (0, 255, 0))
+    show_image(image)
 
 
 def get_contour_line_on_image(contour, image):
     rows, cols = image.shape[:2]
-    [vx, vy, x, y] = cv2.fitLine(contour, cv2.DIST_L2, 0, 0.01, 0.01)
+    [vx, vy, x, y] = cv2.fitLine(contour, cv2.cv.CV_DIST_L2, 0, 0.01, 0.01)
     # First point
     x1 = 0
     y1 = int((-x * vy / vx) + y)
@@ -67,7 +56,8 @@ def get_contours(image, show=False):
     # Remove noise
     prepared_image = cv2.morphologyEx(prepared_image, cv2.MORPH_OPEN,
                                       cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5)))
-    show_image(prepared_image, "Prepared Image")
+    if show:
+        show_image(prepared_image, "Prepared Image")
 
     # Prepare image edges
     # edges = cv2.morphologyEx(image, cv2.MORPH_GRADIENT, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5)))
@@ -138,11 +128,3 @@ def show_image(image, window_name="Stream"):
     cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
     cv2.resizeWindow(window_name, image.shape[1] * 4, image.shape[0] * 4)
     cv2.imshow(window_name, image)  # Show image
-
-
-if __name__ == "__main__":
-    image_scene_pico = cv2.imread('power1.png')
-    image_power_bank = cv2.imread('power_origin2.png')
-    # show_image(image_scene_pico)
-
-    get_object_rotation_in_scene(image_power_bank, image_scene_pico, show=False)
