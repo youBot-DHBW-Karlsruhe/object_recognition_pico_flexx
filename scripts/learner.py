@@ -10,6 +10,7 @@ from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 
 import helper
+from ObjectManager import ObjectManager
 
 roslib.load_manifest('object_recognition_pico_flexx')
 
@@ -20,15 +21,18 @@ class ObjectLearner:
         self.image_sub = rospy.Subscriber("/royale_camera_driver/depth_image", Image, self.callback)
         self.cv_bridge = CvBridge()
         # print("OpenCV version: {0}".format(cv2.__version__)) # 2.4.8
+        self.object_manager = ObjectManager("../objects/objects.json")
 
         self.timestamp_last_call = time.time()
         self.state = "start"
         self.pressed_key = -1
 
         self.colors = {"blue": (255, 0, 0), "pink": (255, 0, 255), "red": (0, 0, 255), "yellow": (0, 255, 255)}
-
         self.tracking_color = (0, 255, 0)  # green
-        self.tracking_contour = None
+
+        self.object_contour = None
+        self.object_angle = None
+        self.object_center = None
 
     def callback(self, img_msg):
         # Prevent running multiple callbacks at once
@@ -85,11 +89,13 @@ class ObjectLearner:
                 if self.pressed_key == ord(self.colors.keys()[index][0]):
                     rospy.loginfo(
                         "Tracking the " + self.colors.keys()[index] + " object. Do you want to save it? (y/n)")
-                    self.tracking_contour = contour
+                    self.object_contour = contour
+                    self.object_angle = helper.get_contour_angle_on_image(contours[index], image_show, None)
+                    self.object_center = helper.get_center_on_image(contours[index], image_show, None)
                     self.state = "track_object"
 
     def track_object(self, contours, image_show):
-        index, difference = helper.find_best_matching_contour(self.tracking_contour, contours)
+        index, difference = helper.find_best_matching_contour(self.object_contour, contours)
 
         if index is not None:
             # Show best result
@@ -98,18 +104,27 @@ class ObjectLearner:
             # print("Angle in scene", angle)
 
             cv2.drawContours(image_show, contours, index, self.tracking_color, 1)
-            angle = helper.get_contour_angle_on_image(contours[index], image_show, self.tracking_color)
-            center = helper.get_center_on_image(contours[index], image_show, self.colors["red"])
+            helper.get_contour_angle_on_image(contours[index], image_show, self.tracking_color)
+            helper.get_center_on_image(contours[index], image_show, self.colors["red"])
 
         helper.show_image(image_show, "Learner")
         self.pressed_key = cv2.waitKey(500) & 255
         if self.pressed_key == ord("n"):
-            self.state = "find_objects"
+            self.state = "start"
         if self.pressed_key == ord("y"):
             self.state = "save_object"
 
     def save_object(self):
-        rospy.loginfo("Saving object...")
+        name = raw_input("Please enter a name for the object...")
+        rospy.loginfo("Saving object under name '" + name + "'...")
+        object_to_save = {
+            "name": name,
+            "contour": self.object_contour,
+            "angle": self.object_angle,
+            "center": self.object_center
+        }
+        self.object_manager.save(object_to_save)
+
         self.state = "start"
 
 
