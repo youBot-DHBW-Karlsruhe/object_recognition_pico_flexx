@@ -100,12 +100,13 @@ class ObjectLearner:
         if index is not None:
             # Show best result
             # print("Contour Length:", len(contours[index]))
-            # print("Matching:", difference)
-            # print("Angle in scene", angle)
+            print("Difference:", difference)
 
             cv2.drawContours(image_show, contours, index, self.tracking_color, 1)
-            helper.get_contour_angle_on_image(contours[index], image_show, self.tracking_color)
+            angle = helper.get_contour_angle_on_image(contours[index], image_show, self.tracking_color)
             helper.get_center_on_image(contours[index], image_show, self.colors["red"])
+
+            # print("Angle in scene", angle)
 
         helper.show_image(image_show, "Learner")
         self.pressed_key = cv2.waitKey(500) & 255
@@ -119,7 +120,7 @@ class ObjectLearner:
         rospy.loginfo("Saving object under name '" + name + "'...")
         object_to_save = {
             "name": name,
-            "contour": self.object_contour,
+            "contour": self.object_contour.tolist(),
             "angle": self.object_angle,
             "center": self.object_center
         }
