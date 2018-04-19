@@ -3,17 +3,17 @@ from __future__ import print_function
 
 import time
 
+import cv2
 import roslib
 import rospy
-import cv2
-from std_msgs.msg import String
-from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
+from sensor_msgs.msg import Image
 
-from ObjectManager import ObjectManager
 import helper
+from ObjectManager import ObjectManager
 
 roslib.load_manifest('object_recognition_pico_flexx')
+
 
 # http://wiki.ros.org/ROS/Tutorials/WritingPublisherSubscriber%28python%29
 class ObjectRecognizer:
@@ -32,7 +32,7 @@ class ObjectRecognizer:
 
     def callback(self, img_msg):
         # Prevent running multiple callbacks at once
-        if time.time() > self.timestamp_last_call + 1:
+        if time.time() > self.timestamp_last_call + 1:  # time.time() in seconds
             self.timestamp_last_call = time.time()
             self.recognize_objects(img_msg)
 
