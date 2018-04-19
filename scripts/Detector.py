@@ -59,13 +59,13 @@ class Detector:
 
         return cx, cy
 
-    def get_contour_angle_on_image(self, contour, image, drawing_color=None):
-        x1, y1, x2, y2 = self.get_contour_line_on_image(contour, image)
+    def get_contour_angle_on_image(self, contour, drawing_color=None):
+        x1, y1, x2, y2 = self.get_contour_line_on_image(contour, self.image_rgb)
         angle_rad = np.arctan((y2 - y1) / (x2 - x1))
         angle_deg = angle_rad * 180 / np.pi + 90
 
         if drawing_color is not None:
-            cv2.line(image, (x1, y1), (x2, y2), drawing_color)
+            cv2.line(self.image_rgb, (x1, y1), (x2, y2), drawing_color)
 
         return angle_deg
 
@@ -103,9 +103,8 @@ class Detector:
 
         # Filter useful contours
         useful_contours = []
-        image = self.image_bw
-        corners = [(2, 2), (2, image.shape[0] - 3), (image.shape[1] - 3, 2), (image.shape[1] - 3, image.shape[0] - 3),
-                   (image.shape[1] - 3, (image.shape[0] - 3) / 2)]
+        image_y, image_x = self.image_bw.shape
+        corners = [(2, 2), (2, image_y - 3), (image_x - 3, 2), (image_x - 3, image_y - 3)]
         for contour in contours:
             # Only select contours with more than 40 points
             if len(contour) > 40:
@@ -122,7 +121,7 @@ class Detector:
 
         # Show useful contours
         if show:
-            image_show = self.image_rgb[:]
+            image_show = np.copy(self.image_rgb)
             # drawContours(image, contours, contourIdx, color, thickness)
             cv2.drawContours(image_show, useful_contours, -1, (0, 255, 255), 1)
             for corner in corners:
