@@ -33,11 +33,9 @@ class ObjectLearner:
 
     def callback(self, img_msg):
         # Prevent running multiple callbacks at once
-        if time.time() > self.timestamp_last_call + 1:
+        if time.time() > self.timestamp_last_call + 1:  # time.time() in seconds
             self.timestamp_last_call = time.time()
             self.learn_objects(img_msg)
-        # else:
-        # print("Ignored")
 
     def learn_objects(self, img_msg):
         image_bw, image_rgb = helper.convert_img_msg(self.cv_bridge, img_msg)
