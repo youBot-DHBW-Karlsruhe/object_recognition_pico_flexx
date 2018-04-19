@@ -1,29 +1,21 @@
 #!/usr/bin/env python
 from __future__ import print_function
 
-import time
-
 import cv2
 import roslib
 import rospy
-from cv_bridge import CvBridge
-from sensor_msgs.msg import Image
 
-import helper
-from ObjectManager import ObjectManager
+from Detector import Detector
 
 roslib.load_manifest('object_recognition_pico_flexx')
 
 
-class Learner:
+class Learner(Detector):
 
     def __init__(self):
-        self.image_sub = rospy.Subscriber("/royale_camera_driver/depth_image", Image, self.callback)
-        self.cv_bridge = CvBridge()
-        # print("OpenCV version: {0}".format(cv2.__version__)) # 2.4.8
-        self.object_manager = ObjectManager("../objects/objects.json")
+        Detector.__init__(self)
+        self.main_method = self.learn_objects
 
-        self.timestamp_last_call = time.time()
         self.state = "start"
         self.pressed_key = -1
 
@@ -31,24 +23,15 @@ class Learner:
         self.object_angle = None
         self.object_center = None
 
-    def callback(self, img_msg):
-        # Prevent running multiple callbacks at once
-        if time.time() > self.timestamp_last_call + 1:  # time.time() in seconds
-            self.timestamp_last_call = time.time()
-            self.learn_objects(img_msg)
-
-    def learn_objects(self, img_msg):
-        image_bw, image_rgb = helper.convert_img_msg(self.cv_bridge, img_msg)
-        contours = helper.get_contours(image_bw, False)
-
+    def learn_objects(self):
         if self.state == "start":
             self.start()
 
         elif self.state == "find_objects":
-            self.find_objects(contours, image_rgb)
+            self.find_objects()
 
         elif self.state == "track_object":
-            self.track_object(contours, image_rgb)
+            self.track_object()
 
         elif self.state == "save_object":
             self.save_object()
@@ -63,43 +46,48 @@ class Learner:
     def start(self):
         rospy.loginfo("Press any of the following buttons to save the respective object:")
         rospy.loginfo(
-            " ".join(["'" + color_name[0] + "'" + " for " + color_name + ";" for color_name in helper.colors.keys()]))
+            " ".join(["'" + color_name[0] + "'" + " for " + color_name + ";" for color_name in self.colors.keys()]))
         self.state = "find_objects"
 
-    def find_objects(self, contours, image_show):
+    def find_objects(self):
+        contours = self.contours
+        image_show = self.image_rgb
 
         for index, contour in enumerate(contours):
-            if index < len(helper.colors):
+            if index < len(self.colors):
                 # drawContours(image, contours, contourIdx, color, thickness)
-                cv2.drawContours(image_show, contours, index, helper.colors.values()[index], 1)
-        helper.show_image(image_show, "Learner")
+                cv2.drawContours(image_show, contours, index, self.colors.values()[index], 1)
+        self.show_image(image_show, "Learner")
 
         self.pressed_key = cv2.waitKey(500) & 255
         for index, contour in enumerate(contours):
-            if index < len(helper.colors):
-                if self.pressed_key == ord(helper.colors.keys()[index][0]):
+            if index < len(self.colors):
+                if self.pressed_key == ord(self.colors.keys()[index][0]):
                     rospy.loginfo(
-                        "Tracking the " + helper.colors.keys()[index] + " object. Do you want to save it? (y/n)")
+                        "Tracking the " + self.colors.keys()[index] + " object. Do you want to save it? (y/n)")
                     self.object_contour = contour
-                    self.object_angle = helper.get_contour_angle_on_image(contours[index], image_show, None)
-                    self.object_center = helper.get_center_on_image(contours[index], image_show, None)
+                    self.object_angle = self.get_contour_angle_on_image(contours[index], image_show, None)
+                    self.object_center = self.get_center_on_image(contours[index], image_show, None)
                     self.state = "track_object"
 
-    def track_object(self, contours, image_show):
-        index, difference = helper.find_best_matching_contour(self.object_contour, contours)
+    def track_object(self):
+        contours = self.contours
+        image_show = self.image_rgb
+
+        index, difference = self.find_best_matching_contour(self.object_contour, contours)
 
         if index is not None:
             # Show best result
             # print("Contour Length:", len(contours[index]))
             print("Difference:", difference)
 
-            cv2.drawContours(image_show, contours, index, helper.colors["green"], 1)
-            angle = helper.get_contour_angle_on_image(contours[index], image_show, helper.colors["green"])
-            helper.get_center_on_image(contours[index], image_show, helper.colors["red"])
+            cv2.drawContours(image_show, contours, index, self.colors["green"], 1)
+            angle = self.get_contour_angle_on_image(contours[index], image_show, self.colors["green"])
+            self.get_center_on_image(contours[index], image_show, self.colors["red"])
 
             # print("Angle in scene", angle)
 
-        helper.show_image(image_show, "Learner")
+        self.show_image(image_show, "Learner")
         self.pressed_key = cv2.waitKey(500) & 255
         if self.pressed_key == ord("n"):
             self.state = "start"
