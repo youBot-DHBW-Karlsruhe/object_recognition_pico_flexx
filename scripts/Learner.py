@@ -15,7 +15,7 @@ from ObjectManager import ObjectManager
 roslib.load_manifest('object_recognition_pico_flexx')
 
 
-class ObjectLearner:
+class Learner:
 
     def __init__(self):
         self.image_sub = rospy.Subscriber("/royale_camera_driver/depth_image", Image, self.callback)
@@ -115,7 +115,7 @@ class ObjectLearner:
 
 
 def main():
-    ObjectLearner()
+    Learner()
     rospy.init_node('object_learner', anonymous=True, disable_signals=True)
     try:
         rospy.spin()

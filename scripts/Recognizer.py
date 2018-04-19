@@ -16,7 +16,7 @@ roslib.load_manifest('object_recognition_pico_flexx')
 
 
 # http://wiki.ros.org/ROS/Tutorials/WritingPublisherSubscriber%28python%29
-class ObjectRecognizer:
+class Recognizer:
 
     def __init__(self):
         self.image_sub = rospy.Subscriber("/royale_camera_driver/depth_image", Image, self.callback)
@@ -87,7 +87,7 @@ class ObjectRecognizer:
 
 
 def main():
-    ObjectRecognizer()
+    Recognizer()
     rospy.init_node('object_recognizer', anonymous=True)
     try:
         rospy.spin()
