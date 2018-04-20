@@ -49,23 +49,21 @@ class Detector:
 
         return index_best, smallest_difference
 
-    def get_center_on_image(self, contour_index, drawing_color=None):
+    def get_center_on_image(self, contour_index):
         M = cv2.moments(self.contours[contour_index])
         cx = int(M['m10'] / M['m00'])
         cy = int(M['m01'] / M['m00'])
 
-        if drawing_color is not None:
-            cv2.circle(self.image_rgb, (cx, cy), 1, drawing_color)
+        cv2.circle(self.image_rgb, (cx, cy), 1, self.colors["red"])
 
         return cx, cy
 
-    def get_contour_angle_on_image(self, contour_index, drawing_color=None):
+    def get_contour_angle_on_image(self, contour_index):
         x1, y1, x2, y2 = self.get_contour_line_on_image(contour_index)
         angle_rad = np.arctan((y2 - y1) / (x2 - x1))
         angle_deg = angle_rad * 180 / np.pi + 90
 
-        if drawing_color is not None:
-            cv2.line(self.image_rgb, (x1, y1), (x2, y2), drawing_color)
+        cv2.line(self.image_rgb, (x1, y1), (x2, y2), self.colors["green"])
 
         return angle_deg
 
@@ -169,3 +167,6 @@ class Detector:
         cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
         cv2.resizeWindow(window_name, image.shape[1] * 4, image.shape[0] * 4)
         cv2.imshow(window_name, image)  # Show image
+
+    def draw_contour(self, contour_index, color_index=1):
+        cv2.drawContours(self.image_rgb, self.contours, contour_index, self.colors.values()[color_index], 1)

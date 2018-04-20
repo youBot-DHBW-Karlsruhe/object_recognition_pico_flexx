@@ -51,22 +51,25 @@ class Learner(Detector):
 
     def find_objects(self):
         # Show colored contours
-        for index, contour in enumerate(self.contours):
-            if index < len(self.colors):
+        for contour_index, contour in enumerate(self.contours):
+            if contour_index < len(self.colors):
                 # drawContours(image, contours, contourIdx, color, thickness)
-                cv2.drawContours(self.image_rgb, self.contours, index, self.colors.values()[index], 1)
+                self.draw_contour(contour_index, contour_index)
         self.show_image(self.image_rgb, "Learner")
 
         # Get desired object
         self.pressed_key = cv2.waitKey(500) & 255
-        for index, contour in enumerate(self.contours):
-            if index < len(self.colors):
-                if self.pressed_key == ord(self.colors.keys()[index][0]):
-                    rospy.loginfo(
-                        "Tracking the " + self.colors.keys()[index] + " object. Do you want to save it? (y/n)")
+        for contour_index, contour in enumerate(self.contours):
+            if contour_index < len(self.colors):
+                if self.pressed_key == ord(self.colors.keys()[contour_index][0]):
+                    # Saving object details
                     self.object_contour = contour
-                    self.object_angle = self.get_contour_angle_on_image(index, None)
-                    self.object_center = self.get_center_on_image(index, None)
+                    self.object_angle = self.get_contour_angle_on_image(contour_index)
+                    self.object_center = self.get_center_on_image(contour_index)
+
+                    # Inform user
+                    rospy.loginfo("Tracking the " + self.colors.keys()[contour_index] + " object.")
+                    rospy.loginfo("Do you want to save it? (y/n)")
                     self.state = "track_object"
 
     def track_object(self):
@@ -76,25 +79,25 @@ class Learner(Detector):
             # Show best result
             print("Difference:", difference)
 
-            cv2.drawContours(self.image_rgb, self.contours, contour_index, self.colors["green"], 1)
-            angle = self.get_contour_angle_on_image(contour_index, self.colors["green"])
-            self.get_center_on_image(contour_index, self.colors["red"])
-
-            # print("Angle in scene", angle)
+            self.draw_contour(contour_index)
+            self.get_contour_angle_on_image(contour_index)
+            self.get_center_on_image(contour_index)
 
         # Get desired action (save/cancel)
         self.show_image(self.image_rgb, "Learner")
         self.pressed_key = cv2.waitKey(500) & 255
-        if self.pressed_key == ord("n"):
-            self.state = "start"
         if self.pressed_key == ord("y"):
             self.state = "save_object"
+        if self.pressed_key == ord("n"):
+            self.state = "start"
 
     def save_object(self):
+        # Getting object name
         name = raw_input("Please enter a name for the object...")
+        # Saving object
         rospy.loginfo("Saving object under name '" + name + "'...")
         self.object_manager.save(name, self.object_contour, self.object_angle, self.object_center)
-
+        # Back to start
         self.state = "start"
 
 
