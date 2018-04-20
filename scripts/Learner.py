@@ -59,7 +59,7 @@ class Learner(Detector):
                 if self.pressed_key == ord(self.colors.keys()[contour_index][0]):
                     # Saving object details
                     self.object_contour = contour
-                    self.object_angle = self.get_contour_angle_on_image(contour_index)
+                    self.object_angle = self.get_initial_gripper_position(contour_index)
                     self.object_center = self.get_center_on_image(contour_index)
 
                     # Inform user
@@ -75,7 +75,7 @@ class Learner(Detector):
             print("Difference:", difference)
 
             self.draw_contour(contour_index)
-            self.get_contour_angle_on_image(contour_index)
+            self.get_initial_gripper_position(contour_index)
             self.get_center_on_image(contour_index)
 
         # Get desired action (save/cancel)

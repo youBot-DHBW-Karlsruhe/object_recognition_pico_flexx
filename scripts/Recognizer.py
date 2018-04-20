@@ -36,7 +36,7 @@ class Recognizer(Detector):
             print("Difference for", obj["name"], ":", difference)
 
             self.draw_contour(contour_index)
-            angle = self.get_contour_angle_on_image(contour_index)
+            angle = self.get_initial_gripper_position(contour_index)
             center = self.get_center_on_image(contour_index)
 
             font = cv2.FONT_HERSHEY_SIMPLEX

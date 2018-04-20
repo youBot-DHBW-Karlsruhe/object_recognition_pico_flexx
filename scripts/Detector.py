@@ -76,26 +76,42 @@ class Detector:
 
         return cx, cy
 
-    def get_contour_angle_on_image(self, contour_index):
-        x1, y1, x2, y2 = self.get_contour_line_on_image(contour_index)
-        angle_rad = np.arctan((y2 - y1) / (x2 - x1))
-        angle_deg = angle_rad * 180 / np.pi + 90
+    def get_initial_gripper_position(self, contour_index):
+        m = -1 / self.get_rotation(contour_index)
 
-        cv2.line(self.image_rgb, (x1, y1), (x2, y2), self.colors["green"])
+        cx, cy = self.get_center_on_image(contour_index)
 
-        return angle_deg
-
-    def get_contour_line_on_image(self, contour_index):
         rows, cols = self.image_rgb.shape[:2]
-        [vx, vy, x, y] = cv2.fitLine(self.contours[contour_index], cv2.cv.CV_DIST_L2, 0, 0.01, 0.01)
+
         # First point
         x1 = 0
-        y1 = int((-x * vy / vx) + y)
+        y1 = int(cy - cx * m)
         # Second point
         x2 = cols - 1
-        y2 = int(((cols - x) * vy / vx) + y)
+        y2 = int(cy + (x2 - cx) * m)
 
-        return x1, y1, x2, y2
+        contour = np.zeros(self.image_rgb.shape[0:2])
+        line1 = np.zeros(self.image_rgb.shape[0:2])
+        line2 = np.zeros(self.image_rgb.shape[0:2])
+
+        cv2.drawContours(contour, self.contours, contour_index, 1)
+        cv2.line(line1, (cx, cy), (x2, y2), 1, thickness=2)
+        cv2.line(line2, (x1, y1), (cx, cy), 1, thickness=2)
+
+        intersection1 = np.logical_and(contour, line1)
+        intersection2 = np.logical_and(contour, line2)
+
+        points1 = np.where(intersection1)
+        points2 = np.where(intersection2)
+
+        self.debug_image(intersection, "calc")
+
+        return None
+
+    def get_rotation(self, contour_index):
+        [vx, vy, x, y] = cv2.fitLine(self.contours[contour_index], cv2.cv.CV_DIST_L2, 0, 0.01, 0.01)
+
+        return vy / vx
 
     def get_contours(self):
         # Only pay attention to objects nearer/darker than ... Else --> 0 (ignore, is ground)
