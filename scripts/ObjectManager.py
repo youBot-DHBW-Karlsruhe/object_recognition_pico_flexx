@@ -1,15 +1,15 @@
-import json
 import numpy as np
-import os
+
+from JsonManager import JsonManager
 
 
-class ObjectManager:
+class ObjectManager(JsonManager):
 
     def __init__(self, file_path):
         # Converting relative file path to absolute file path
-        self.file_path = os.path.join(os.path.dirname(__file__), file_path)
+        JsonManager.__init__(self, file_path)
 
-    def save(self, name, object_contour, object_angle, object_center):
+    def save_object(self, name, object_contour, object_angle, object_center):
         # Create JSON object
         object_to_save = {
             "name": name,
@@ -23,23 +23,7 @@ class ObjectManager:
         # Append object
         object_list.append(object_to_save)
 
-        # Save list of objects
-        outfile = open(self.file_path, 'w+')
-        json.dump(object_list, outfile)
-
-    def load_json(self):
-        directory = os.path.dirname(self.file_path)
-
-        # load list of saved objects
-        try:
-            json_file = open(self.file_path)
-            object_list = json.load(json_file)
-        except (EnvironmentError, ValueError):
-            if not os.path.exists(directory):
-                os.makedirs(directory)
-            object_list = []
-
-        return object_list
+        self.save_json(object_list)
 
     def load_objects(self):
         # Load existent objects

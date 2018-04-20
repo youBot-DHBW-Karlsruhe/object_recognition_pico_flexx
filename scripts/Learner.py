@@ -91,7 +91,7 @@ class Learner(Detector):
         name = raw_input("Please enter a name for the object...")
         # Saving object
         rospy.loginfo("Saving object under name '" + name + "'...")
-        self.object_manager.save(name, self.object_contour, self.object_angle, self.object_center)
+        self.object_manager.save_object(name, self.object_contour, self.object_angle, self.object_center)
         # Back to start
         self.state = "start"
 
