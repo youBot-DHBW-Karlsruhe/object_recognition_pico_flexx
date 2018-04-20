@@ -7,6 +7,7 @@ import rospy
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 
+from JsonManager import JsonManager
 from ObjectManager import ObjectManager
 
 roslib.load_manifest('object_recognition_pico_flexx')
@@ -19,7 +20,8 @@ class Detector:
         self.cv_bridge = CvBridge()
 
         # print("OpenCV version: {0}".format(cv2.__version__)) # 2.4.8
-        self.object_manager = ObjectManager("../objects/objects.json")
+        self.settings = JsonManager("../parameters/settings.json").load_json()
+        self.object_manager = ObjectManager(self.settings["objects"])
 
         self.timestamp_last_call = time.time()
         self.loop_method = None
@@ -41,7 +43,7 @@ class Detector:
             self.timestamp_last_call = time.time()
 
             self.convert_img_msg(img_msg)
-            self.get_contours(True)
+            self.get_contours()
             self.loop_method()
 
             # Detect user shutdown
@@ -95,17 +97,19 @@ class Detector:
 
         return x1, y1, x2, y2
 
-    def get_contours(self, show=False):
-        # Only look at the interesting brightness values
-        prepared_image = self.adjust_gamma(self.image_bw, val_min=38, val_max=58)
+    def get_contours(self):
         # Only pay attention to objects nearer/darker than ... Else --> 0 (ignore, is ground)
-        # Delete objects further away than ...
-        ret, prepared_image = cv2.threshold(prepared_image, ((55 - 40) * 255) / (60 - 40), 0, cv2.THRESH_TOZERO_INV)
+
+        # Delete obstacles further away than ...
+        thresh = (self.settings["camera_thresh"] - self.settings["camera_min"]) * 255 / \
+                 (self.settings["camera_max"] - self.settings["camera_min"])
+
+        ret, prepared_image = cv2.threshold(self.image_bw, thresh, 0, cv2.THRESH_TOZERO_INV)
         # Remove noise
         prepared_image = cv2.morphologyEx(prepared_image, cv2.MORPH_OPEN,
                                           cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5)))
-        if show:
-            self.debug_image(prepared_image, "Prepared Image")
+
+        self.debug_image(prepared_image, "Prepared Image")
 
         # Prepare image edges
         # edges = cv2.morphologyEx(image, cv2.MORPH_GRADIENT, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5)))
@@ -116,7 +120,7 @@ class Detector:
         contours = cv2.findContours(prepared_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0]
 
         # Filter useful contours
-        useful_contours = []
+        self.contours = []
         image_y, image_x = self.image_bw.shape
         corners = [(2, 2), (2, image_y - 3), (image_x - 3, 2), (image_x - 3, image_y - 3)]
         for contour in contours:
@@ -128,47 +132,32 @@ class Detector:
                     if cv2.pointPolygonTest(contour, point, False) == 1:
                         in_corner = True
                 if not in_corner:
-                    useful_contours.append(contour)
+                    self.contours.append(contour)
 
         # Sort useful contours by their number of points
-        useful_contours.sort(key=len, reverse=True)
+        self.contours.sort(key=len, reverse=True)
 
         # Show useful contours
-        if show:
-            image_show = np.copy(self.image_rgb)
-            # drawContours(image, contours, contourIdx, color, thickness)
-            cv2.drawContours(image_show, useful_contours, -1, (0, 255, 255), 1)
-            for corner in corners:
-                cv2.circle(image_show, corner, 1, color=(255, 0, 0), thickness=1)
-            self.debug_image(image_show, "Useful Contours")
-
-        self.contours = useful_contours
-
-    def adjust_gamma(self, image, val_min=60, val_max=100):
-        # build a lookup table mapping the pixel values [0, 255] to
-        # their adjusted gamma values
-
-        table = []
-        for i in range(256):
-            value = ((i - val_min) * 255) / (val_max - val_min)
-            if i < 30:
-                value = ((50 - val_min) * 255) / (val_max - val_min)
-            if value <= 0:
-                value = 0
-            if value > 255:
-                value = 255
-            table.append(value)
-        table = np.array(table).astype("uint8")
-
-        # apply gamma correction using the lookup table
-        return cv2.LUT(image, table)
+        image_show = np.copy(self.image_rgb)
+        # drawContours(image, contours, contourIdx, color, thickness)
+        cv2.drawContours(image_show, self.contours, -1, (0, 255, 255), 1)
+        for corner in corners:
+            cv2.circle(image_show, corner, 1, color=(255, 0, 0), thickness=1)
+        self.debug_image(image_show, "Useful Contours")
 
     def convert_img_msg(self, img_msg):
         # Convert ros image message to numpy array
-        cv_image = self.cv_bridge.imgmsg_to_cv2(img_msg, "32FC1")
-        # Convert 32fc1 to 8uc1 (Gray scale)
-        self.image_bw = (cv_image * 255).astype('u1')
-        # helper.show_image(image, "Origin")
+        float_image = self.cv_bridge.imgmsg_to_cv2(img_msg, "32FC1")
+
+        # Adjust Image
+        float_image[float_image < 0.01] = self.settings["camera_thresh"]
+        float_image = (float_image - self.settings["camera_min"]) / \
+                      (self.settings["camera_max"] - self.settings["camera_min"])
+        float_image[float_image > 1] = 1
+        float_image[float_image < 0] = 0
+
+        # Convert 32fc1 to 8uc1
+        self.image_bw = (float_image * 255).astype('u1')
         self.image_rgb = cv2.cvtColor(self.image_bw, cv2.COLOR_GRAY2RGB)
 
     def show_image_wait(self, window_name):
