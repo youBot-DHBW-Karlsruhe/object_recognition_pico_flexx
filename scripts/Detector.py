@@ -32,6 +32,9 @@ class Detector:
         self.image_rgb = None
         self.contours = None
 
+        rospy.loginfo("To enable/disable debugging images, press D")
+        self.debugging = True
+
     def callback(self, img_msg):
         # Prevent running multiple callbacks at once
         if time.time() > self.timestamp_last_call + 1:  # time.time() in seconds
@@ -41,9 +44,13 @@ class Detector:
             self.get_contours(True)
             self.loop_method()
 
-        # Detect user shutdown
-        if self.pressed_key == 27:  # 27 = Escape key
-            rospy.signal_shutdown("User Shutdown")
+            # Detect user shutdown
+            if self.pressed_key == 27:  # 27 = Escape key
+                rospy.signal_shutdown("User Shutdown")
+            # Detect debugging
+            if self.pressed_key == ord('d'):
+                self.debugging = not self.debugging
+                rospy.loginfo("Debugging: " + str(self.debugging))
 
     def find_matching_contour(self, contour_object):
         smallest_difference = 0.2
@@ -98,7 +105,7 @@ class Detector:
         prepared_image = cv2.morphologyEx(prepared_image, cv2.MORPH_OPEN,
                                           cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5)))
         if show:
-            self.show_image(prepared_image, "Prepared Image")
+            self.debug_image(prepared_image, "Prepared Image")
 
         # Prepare image edges
         # edges = cv2.morphologyEx(image, cv2.MORPH_GRADIENT, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5)))
@@ -133,7 +140,7 @@ class Detector:
             cv2.drawContours(image_show, useful_contours, -1, (0, 255, 255), 1)
             for corner in corners:
                 cv2.circle(image_show, corner, 1, color=(255, 0, 0), thickness=1)
-            self.show_image(image_show, "Useful Contours")
+            self.debug_image(image_show, "Useful Contours")
 
         self.contours = useful_contours
 
@@ -164,14 +171,19 @@ class Detector:
         # helper.show_image(image, "Origin")
         self.image_rgb = cv2.cvtColor(self.image_bw, cv2.COLOR_GRAY2RGB)
 
-    def show_image_wait(self, image, window_name="Stream"):
-        self.show_image(image, window_name)
+    def show_image_wait(self, window_name):
+        show_image(self.image_rgb, window_name)
         self.pressed_key = cv2.waitKey(500) & 255
 
-    def show_image(self, image, window_name="Stream"):
-        cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
-        cv2.resizeWindow(window_name, image.shape[1] * 4, image.shape[0] * 4)
-        cv2.imshow(window_name, image)  # Show image
+    def debug_image(self, image, window_name):
+        if self.debugging:
+            show_image(image, window_name)
 
     def draw_contour(self, contour_index, color_index=2):
         cv2.drawContours(self.image_rgb, self.contours, contour_index, self.colors.values()[color_index], 1)
+
+
+def show_image(image, window_name):
+    cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+    cv2.resizeWindow(window_name, image.shape[1] * 4, image.shape[0] * 4)
+    cv2.imshow(window_name, image)  # Show image

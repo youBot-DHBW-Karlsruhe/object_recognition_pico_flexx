@@ -44,7 +44,7 @@ class Recognizer(Detector):
 
             # print("Angle in scene", angle)
 
-        self.show_image_wait(self.image_rgb, "Recognized Objects")
+        self.show_image_wait("Recognized Objects")
 
         # (rows, cols) = cv_image.shape
         # if cols > 60 and rows > 60:

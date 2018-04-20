@@ -51,7 +51,7 @@ class Learner(Detector):
             if contour_index < len(self.colors):
                 # drawContours(image, contours, contourIdx, color, thickness)
                 self.draw_contour(contour_index, contour_index)
-        self.show_image_wait(self.image_rgb, "Learner")
+        self.show_image_wait("Learner")
 
         # Get desired object
         for contour_index, contour in enumerate(self.contours):
@@ -79,7 +79,7 @@ class Learner(Detector):
             self.get_center_on_image(contour_index)
 
         # Get desired action (save/cancel)
-        self.show_image_wait(self.image_rgb, "Learner")
+        self.show_image_wait("Learner")
 
         if self.pressed_key == ord("y"):
             self.state = "save_object"
