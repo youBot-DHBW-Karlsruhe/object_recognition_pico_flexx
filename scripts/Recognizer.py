@@ -14,7 +14,7 @@ class Recognizer(Detector):
 
     def __init__(self):
         Detector.__init__(self)
-        self.main_method = self.recognize_objects
+        self.loop_method = self.recognize_objects
 
         self.objects = self.object_manager.load_objects()
 

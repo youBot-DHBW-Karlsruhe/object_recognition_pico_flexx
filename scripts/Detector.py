@@ -2,11 +2,14 @@ import numpy as np
 import time
 
 import cv2
+import roslib
 import rospy
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 
 from ObjectManager import ObjectManager
+
+roslib.load_manifest('object_recognition_pico_flexx')
 
 
 class Detector:
@@ -19,7 +22,7 @@ class Detector:
         self.object_manager = ObjectManager("../objects/objects.json")
 
         self.timestamp_last_call = time.time()
-        self.main_method = None
+        self.loop_method = None
         self.pressed_key = -1
 
         self.colors = {"blue": (255, 0, 0), "green": (0, 255, 0), "red": (0, 0, 255), "yellow": (0, 255, 255),
@@ -36,7 +39,7 @@ class Detector:
 
             self.convert_img_msg(img_msg)
             self.get_contours(True)
-            self.main_method()
+            self.loop_method()
 
         # Detect user shutdown
         if self.pressed_key == 27:  # 27 = Escape key

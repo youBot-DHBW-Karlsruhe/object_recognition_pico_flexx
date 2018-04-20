@@ -14,7 +14,7 @@ class Learner(Detector):
 
     def __init__(self):
         Detector.__init__(self)
-        self.main_method = self.learn_objects
+        self.loop_method = self.learn_objects
 
         self.state = "start"
 
