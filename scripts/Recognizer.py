@@ -1,12 +1,10 @@
 #!/usr/bin/env python
 from __future__ import print_function
 
-import time
-
 import cv2
 import roslib
 import rospy
-from cv_bridge import CvBridge
+
 from sensor_msgs.msg import Image
 
 from Detector import Detector
