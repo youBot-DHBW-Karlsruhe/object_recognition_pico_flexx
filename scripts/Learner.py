@@ -50,12 +50,14 @@ class Learner(Detector):
         self.state = "find_objects"
 
     def find_objects(self):
+        # Show colored contours
         for index, contour in enumerate(self.contours):
             if index < len(self.colors):
                 # drawContours(image, contours, contourIdx, color, thickness)
                 cv2.drawContours(self.image_rgb, self.contours, index, self.colors.values()[index], 1)
         self.show_image(self.image_rgb, "Learner")
 
+        # Get desired object
         self.pressed_key = cv2.waitKey(500) & 255
         for index, contour in enumerate(self.contours):
             if index < len(self.colors):
@@ -63,24 +65,25 @@ class Learner(Detector):
                     rospy.loginfo(
                         "Tracking the " + self.colors.keys()[index] + " object. Do you want to save it? (y/n)")
                     self.object_contour = contour
-                    self.object_angle = self.get_contour_angle_on_image(self.contours[index], None)
-                    self.object_center = self.get_center_on_image(self.contours[index], self.image_rgb, None)
+                    self.object_angle = self.get_contour_angle_on_image(index, None)
+                    self.object_center = self.get_center_on_image(index, None)
                     self.state = "track_object"
 
     def track_object(self):
-        index, difference = self.find_best_matching_contour(self.object_contour, self.contours)
+        contour_index, difference = self.find_matching_contour(self.object_contour)
 
-        if index is not None:
+        if contour_index is not None:
             # Show best result
             # print("Contour Length:", len(contours[index]))
             print("Difference:", difference)
 
-            cv2.drawContours(self.image_rgb, self.contours, index, self.colors["green"], 1)
-            angle = self.get_contour_angle_on_image(self.contours[index], self.colors["green"])
-            self.get_center_on_image(self.contours[index], self.image_rgb, self.colors["red"])
+            cv2.drawContours(self.image_rgb, self.contours, contour_index, self.colors["green"], 1)
+            angle = self.get_contour_angle_on_image(contour_index, self.colors["green"])
+            self.get_center_on_image(contour_index, self.colors["red"])
 
             # print("Angle in scene", angle)
 
+        # Get desired action (save/cancel)
         self.show_image(self.image_rgb, "Learner")
         self.pressed_key = cv2.waitKey(500) & 255
         if self.pressed_key == ord("n"):

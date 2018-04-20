@@ -37,11 +37,11 @@ class Detector:
             self.get_contours(True)
             self.main_method()
 
-    def find_best_matching_contour(self, contour_object, contours_scene):
+    def find_matching_contour(self, contour_object):
         smallest_difference = 0.2
         index_best = None
 
-        for index, contour_scene in enumerate(contours_scene):
+        for index, contour_scene in enumerate(self.contours):
             difference = cv2.matchShapes(contour_scene, contour_object, 1, 0.0)
             if difference < smallest_difference:
                 smallest_difference = difference
@@ -49,18 +49,18 @@ class Detector:
 
         return index_best, smallest_difference
 
-    def get_center_on_image(self, contour, image, drawing_color=None):
-        M = cv2.moments(contour)
+    def get_center_on_image(self, contour_index, drawing_color=None):
+        M = cv2.moments(self.contours[contour_index])
         cx = int(M['m10'] / M['m00'])
         cy = int(M['m01'] / M['m00'])
 
         if drawing_color is not None:
-            cv2.circle(image, (cx, cy), 1, drawing_color)
+            cv2.circle(self.image_rgb, (cx, cy), 1, drawing_color)
 
         return cx, cy
 
-    def get_contour_angle_on_image(self, contour, drawing_color=None):
-        x1, y1, x2, y2 = self.get_contour_line_on_image(contour, self.image_rgb)
+    def get_contour_angle_on_image(self, contour_index, drawing_color=None):
+        x1, y1, x2, y2 = self.get_contour_line_on_image(contour_index)
         angle_rad = np.arctan((y2 - y1) / (x2 - x1))
         angle_deg = angle_rad * 180 / np.pi + 90
 
@@ -69,9 +69,9 @@ class Detector:
 
         return angle_deg
 
-    def get_contour_line_on_image(self, contour, image):
-        rows, cols = image.shape[:2]
-        [vx, vy, x, y] = cv2.fitLine(contour, cv2.cv.CV_DIST_L2, 0, 0.01, 0.01)
+    def get_contour_line_on_image(self, contour_index):
+        rows, cols = self.image_rgb.shape[:2]
+        [vx, vy, x, y] = cv2.fitLine(self.contours[contour_index], cv2.cv.CV_DIST_L2, 0, 0.01, 0.01)
         # First point
         x1 = 0
         y1 = int((-x * vy / vx) + y)
