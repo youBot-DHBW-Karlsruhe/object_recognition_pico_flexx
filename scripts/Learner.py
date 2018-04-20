@@ -74,7 +74,6 @@ class Learner(Detector):
 
         if contour_index is not None:
             # Show best result
-            # print("Contour Length:", len(contours[index]))
             print("Difference:", difference)
 
             cv2.drawContours(self.image_rgb, self.contours, contour_index, self.colors["green"], 1)

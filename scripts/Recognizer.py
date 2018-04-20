@@ -25,20 +25,21 @@ class Recognizer(Detector):
         self.image_pub = rospy.Publisher("object_recognizer_visualization", Image, queue_size=10)
 
     def recognize_objects(self):
+        # Find best matching contour for each object
         recognized_contours = {}
 
         for obj in self.objects:
             contour_index, difference = self.find_matching_contour(obj["contour"])
 
             if contour_index is not None:
+                # Only assign object to a contour if it is a better match for that contour
                 if contour_index not in recognized_contours or recognized_contours[contour_index] > difference:
                     recognized_contours[contour_index] = (obj, difference)
 
+        # Visualize found objects
         for contour_index, (obj, difference) in recognized_contours.iteritems():
-            # rospy.loginfo("Found object with name '" + obj["name"] + "'!")
             # Show best result
-            # print("Contour Length:", len(contours[contour_index]))
-            print("Difference:", difference)
+            print("Difference for", obj["name"], ":", difference)
 
             cv2.drawContours(self.image_rgb, self.contours, contour_index, self.colors["green"], 1)
             angle = self.get_contour_angle_on_image(contour_index, self.colors["green"])
