@@ -5,14 +5,11 @@ import cv2
 import roslib
 import rospy
 
-from sensor_msgs.msg import Image
-
 from Detector import Detector
 
 roslib.load_manifest('object_recognition_pico_flexx')
 
 
-# http://wiki.ros.org/ROS/Tutorials/WritingPublisherSubscriber%28python%29
 class Recognizer(Detector):
 
     def __init__(self):
@@ -22,7 +19,6 @@ class Recognizer(Detector):
         self.objects = self.object_manager.load_objects()
 
         # self.pub = rospy.Publisher('/recognized_objects', String, queue_size=10)
-        self.image_pub = rospy.Publisher("object_recognizer_visualization", Image, queue_size=10)
 
     def recognize_objects(self):
         # Find best matching contour for each object
@@ -41,9 +37,9 @@ class Recognizer(Detector):
             # Show best result
             print("Difference for", obj["name"], ":", difference)
 
-            cv2.drawContours(self.image_rgb, self.contours, contour_index, self.colors["green"], 1)
-            angle = self.get_contour_angle_on_image(contour_index, self.colors["green"])
-            center = self.get_center_on_image(contour_index, self.colors["red"])
+            self.draw_contour(contour_index)
+            angle = self.get_contour_angle_on_image(contour_index)
+            center = self.get_center_on_image(contour_index)
 
             font = cv2.FONT_HERSHEY_SIMPLEX
             cv2.putText(self.image_rgb, obj["name"], center, font, 0.5, self.colors["pink"])

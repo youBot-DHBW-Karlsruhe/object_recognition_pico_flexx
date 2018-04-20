@@ -168,5 +168,5 @@ class Detector:
         cv2.resizeWindow(window_name, image.shape[1] * 4, image.shape[0] * 4)
         cv2.imshow(window_name, image)  # Show image
 
-    def draw_contour(self, contour_index, color_index=1):
+    def draw_contour(self, contour_index, color_index=2):
         cv2.drawContours(self.image_rgb, self.contours, contour_index, self.colors.values()[color_index], 1)
