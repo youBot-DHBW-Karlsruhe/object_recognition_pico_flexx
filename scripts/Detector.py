@@ -20,6 +20,7 @@ class Detector:
 
         self.timestamp_last_call = time.time()
         self.main_method = None
+        self.pressed_key = -1
 
         self.colors = {"blue": (255, 0, 0), "green": (0, 255, 0), "red": (0, 0, 255), "yellow": (0, 255, 255),
                        "pink": (255, 0, 255)}
@@ -37,6 +38,10 @@ class Detector:
             self.get_contours(True)
             self.main_method()
 
+        # Detect user shutdown
+        if self.pressed_key == 27:  # 27 = Escape key
+            rospy.signal_shutdown("User Shutdown")
+
     def find_matching_contour(self, contour_object):
         smallest_difference = 0.2
         index_best = None
@@ -50,6 +55,7 @@ class Detector:
         return index_best, smallest_difference
 
     def get_center_on_image(self, contour_index):
+        # noinspection PyPep8Naming
         M = cv2.moments(self.contours[contour_index])
         cx = int(M['m10'] / M['m00'])
         cy = int(M['m01'] / M['m00'])
@@ -156,12 +162,8 @@ class Detector:
         self.image_rgb = cv2.cvtColor(self.image_bw, cv2.COLOR_GRAY2RGB)
 
     def show_image_wait(self, image, window_name="Stream"):
-        while True:
-            self.show_image(image, window_name)
-            pressed_key = cv2.waitKey(1000)
-            print(pressed_key)
-            if pressed_key != -1:  # Button pressed
-                break
+        self.show_image(image, window_name)
+        self.pressed_key = cv2.waitKey(500) & 255
 
     def show_image(self, image, window_name="Stream"):
         cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)

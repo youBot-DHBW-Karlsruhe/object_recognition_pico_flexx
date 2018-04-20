@@ -17,7 +17,6 @@ class Learner(Detector):
         self.main_method = self.learn_objects
 
         self.state = "start"
-        self.pressed_key = -1
 
         self.object_contour = None
         self.object_angle = None
@@ -40,9 +39,6 @@ class Learner(Detector):
             rospy.logerr("Unknown learner state! Shutting down...")
             rospy.signal_shutdown("Unknown state")
 
-        if self.pressed_key == 27:  # 27 = Escape key
-            rospy.signal_shutdown("User Shutdown")
-
     def start(self):
         rospy.loginfo("Press any of the following buttons to save the respective object:")
         rospy.loginfo(
@@ -55,10 +51,9 @@ class Learner(Detector):
             if contour_index < len(self.colors):
                 # drawContours(image, contours, contourIdx, color, thickness)
                 self.draw_contour(contour_index, contour_index)
-        self.show_image(self.image_rgb, "Learner")
+        self.show_image_wait(self.image_rgb, "Learner")
 
         # Get desired object
-        self.pressed_key = cv2.waitKey(500) & 255
         for contour_index, contour in enumerate(self.contours):
             if contour_index < len(self.colors):
                 if self.pressed_key == ord(self.colors.keys()[contour_index][0]):
@@ -84,8 +79,8 @@ class Learner(Detector):
             self.get_center_on_image(contour_index)
 
         # Get desired action (save/cancel)
-        self.show_image(self.image_rgb, "Learner")
-        self.pressed_key = cv2.waitKey(500) & 255
+        self.show_image_wait(self.image_rgb, "Learner")
+
         if self.pressed_key == ord("y"):
             self.state = "save_object"
         if self.pressed_key == ord("n"):

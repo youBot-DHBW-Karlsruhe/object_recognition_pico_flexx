@@ -18,8 +18,6 @@ class Recognizer(Detector):
 
         self.objects = self.object_manager.load_objects()
 
-        # self.pub = rospy.Publisher('/recognized_objects', String, queue_size=10)
-
     def recognize_objects(self):
         # Find best matching contour for each object
         recognized_contours = {}
@@ -46,10 +44,7 @@ class Recognizer(Detector):
 
             # print("Angle in scene", angle)
 
-        self.show_image(self.image_rgb, "Recognized Objects")
-        pressed_key = cv2.waitKey(500) & 255
-        if pressed_key == 27:  # 27 = Escape key
-            rospy.signal_shutdown("User Shutdown")
+        self.show_image_wait(self.image_rgb, "Recognized Objects")
 
         # (rows, cols) = cv_image.shape
         # if cols > 60 and rows > 60:
