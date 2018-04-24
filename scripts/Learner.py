@@ -19,7 +19,7 @@ class Learner(Detector):
         self.state = "start"
 
         self.object_contour = None
-        self.object_angle = None
+        self.object_gripper_expanse = None
         self.object_center = None
 
     def learn_objects(self):
@@ -59,7 +59,7 @@ class Learner(Detector):
                 if self.pressed_key == ord(self.colors.keys()[contour_index][0]):
                     # Saving object details
                     self.object_contour = contour
-                    self.object_angle = self.get_initial_gripper_position(contour_index)
+                    self.object_gripper_expanse = self.get_initial_gripper_expanse(contour_index)
                     self.object_center = self.get_center_on_image(contour_index)
 
                     # Inform user
@@ -75,7 +75,7 @@ class Learner(Detector):
             print("Difference:", difference)
 
             self.draw_contour(contour_index)
-            self.get_initial_gripper_position(contour_index)
+            self.get_initial_gripper_expanse(contour_index)
             self.get_center_on_image(contour_index)
 
         # Get desired action (save/cancel)
@@ -91,7 +91,7 @@ class Learner(Detector):
         name = raw_input("Please enter a name for the object...")
         # Saving object
         rospy.loginfo("Saving object under name '" + name + "'...")
-        self.object_manager.save_object(name, self.object_contour, self.object_angle, self.object_center)
+        self.object_manager.save_object(name, self.object_contour, self.object_gripper_expanse, self.object_center)
         # Back to start
         self.state = "start"
 

@@ -76,37 +76,52 @@ class Detector:
 
         return cx, cy
 
-    def get_initial_gripper_position(self, contour_index):
+    def get_initial_gripper_expanse(self, contour_index):
         m = -1 / self.get_rotation(contour_index)
 
-        cx, cy = self.get_center_on_image(contour_index)
+        center = self.get_center_on_image(contour_index)
+        cx, cy = center
 
         rows, cols = self.image_rgb.shape[:2]
 
         # First point
         x1 = 0
         y1 = int(cy - cx * m)
+        point_1 = (x1, y1)
         # Second point
         x2 = cols - 1
         y2 = int(cy + (x2 - cx) * m)
+        point_2 = (x2, y2)
 
-        contour = np.zeros(self.image_rgb.shape[0:2])
-        line1 = np.zeros(self.image_rgb.shape[0:2])
-        line2 = np.zeros(self.image_rgb.shape[0:2])
+        intersection1 = self.intersect_line_with_contour(center, point_1, contour_index)
+        intersection2 = self.intersect_line_with_contour(center, point_2, contour_index)
 
-        cv2.drawContours(contour, self.contours, contour_index, 1)
-        cv2.line(line1, (cx, cy), (x2, y2), 1, thickness=2)
-        cv2.line(line2, (x1, y1), (cx, cy), 1, thickness=2)
+        cv2.circle(self.image_rgb, intersection1, 3, color=self.colors["yellow"], thickness=1)
+        cv2.circle(self.image_rgb, intersection2, 3, color=self.colors["yellow"], thickness=1)
 
-        intersection1 = np.logical_and(contour, line1)
-        intersection2 = np.logical_and(contour, line2)
+        distance = np.sqrt(np.power(intersection1[0] - intersection2[0], 2)
+                           + np.power(intersection1[1] - intersection2[1], 2))
 
-        points1 = np.where(intersection1)
-        points2 = np.where(intersection2)
+        return distance
 
-        self.debug_image(intersection, "calc")
+    def intersect_line_with_contour(self, line_start, line_end, contour_index):
+        contour_pixels = np.zeros(self.image_rgb.shape[0:2])
+        line_pixels = np.zeros(self.image_rgb.shape[0:2])
+        debug = np.zeros(self.image_rgb.shape[0:2])
 
-        return None
+        cv2.drawContours(contour_pixels, self.contours, contour_index, 1)
+        cv2.drawContours(debug, self.contours, contour_index, 1)
+        cv2.line(line_pixels, line_start, line_end, 1, thickness=2)
+        cv2.line(debug, line_start, line_end, 1, thickness=2)
+
+        intersection = np.logical_and(contour_pixels, line_pixels)
+
+        intersection_x = int(np.average(np.where(intersection)[1]))
+        intersection_y = int(np.average(np.where(intersection)[0]))
+
+        cv2.circle(debug, (intersection_x, intersection_y), 5, color=1, thickness=1)
+
+        return intersection_x, intersection_y
 
     def get_rotation(self, contour_index):
         [vx, vy, x, y] = cv2.fitLine(self.contours[contour_index], cv2.cv.CV_DIST_L2, 0, 0.01, 0.01)
@@ -158,7 +173,7 @@ class Detector:
         # drawContours(image, contours, contourIdx, color, thickness)
         cv2.drawContours(image_show, self.contours, -1, (0, 255, 255), 1)
         for corner in corners:
-            cv2.circle(image_show, corner, 1, color=(255, 0, 0), thickness=1)
+            cv2.circle(image_show, corner, 1, color=self.colors["blue"], thickness=1)
         self.debug_image(image_show, "Useful Contours")
 
     def convert_img_msg(self, img_msg):
