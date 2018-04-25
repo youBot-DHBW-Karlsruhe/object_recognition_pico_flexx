@@ -19,7 +19,7 @@ class Detector:
         self.image_sub = rospy.Subscriber("/royale_camera_driver/depth_image", Image, self.callback)
         self.cv_bridge = CvBridge()
 
-        # print("OpenCV version: {0}".format(cv2.__version__)) # 2.4.8
+        # print("OpenCV version: {0}".format(cv2.__version__))  # 2.4.8
         self.settings = JsonManager("../parameters/settings.json").load_json()
         self.object_manager = ObjectManager(self.settings["objects"])
 
@@ -139,7 +139,7 @@ class Detector:
         return intersection_x, intersection_y
 
     def get_rotation(self, contour_index):
-        [vx, vy, x, y] = cv2.fitLine(self.contours[contour_index], cv2.cv.CV_DIST_L2, 0, 0.01, 0.01)
+        vx, vy, _, _ = cv2.fitLine(self.contours[contour_index], cv2.cv.CV_DIST_L2, 0, 0.01, 0.01)
 
         return vy / vx
 
