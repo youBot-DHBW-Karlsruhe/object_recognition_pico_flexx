@@ -72,30 +72,76 @@ class Detector:
         cx = int(M['m10'] / M['m00'])
         cy = int(M['m01'] / M['m00'])
 
-        cv2.circle(self.image_rgb, (cx, cy), 1, self.colors["red"])
+        # cv2.circle(self.image_rgb, (cx, cy), 1, self.colors["red"])
 
         return cx, cy
 
-    def get_contour_angle_on_image(self, contour_index):
-        x1, y1, x2, y2 = self.get_contour_line_on_image(contour_index)
-        angle_rad = np.arctan((y2 - y1) / (x2 - x1))
-        angle_deg = angle_rad * 180 / np.pi + 90
+    def get_gripper_parameters(self, contour_index):
+        center, x1, x2, y1, y2, angle = self.get_points_on_vertical(contour_index)
 
-        cv2.line(self.image_rgb, (x1, y1), (x2, y2), self.colors["green"])
+        gripper_finger1 = self.get_finger_position(center, contour_index, x1, y1)
+        gripper_finger2 = self.get_finger_position(center, contour_index, x2, y2)
 
-        return angle_deg
+        distance = get_distance(gripper_finger1, gripper_finger2)
 
-    def get_contour_line_on_image(self, contour_index):
+        midpoint_x = int(np.average([gripper_finger1[0], gripper_finger2[0]]))
+        midpoint_y = int(np.average([gripper_finger1[1], gripper_finger2[1]]))
+        midpoint = (midpoint_x, midpoint_y)
+
+        cv2.circle(self.image_rgb, midpoint, 1, self.colors["red"])
+
+        return midpoint, angle, distance
+
+    def get_finger_position(self, center, contour_index, x1, y1):
+        point = (x1, y1)
+        intersection1 = self.intersect_line_with_contour(center, point, contour_index)
+        finger_x = int(intersection1[0] + (x1 - intersection1[0]) / get_distance(intersection1, point) * 4)
+        finger_y = int(intersection1[1] + (y1 - intersection1[1]) / get_distance(intersection1, point) * 4)
+        finger = (finger_x, finger_y)
+        # cv2.circle(self.image_rgb, intersection1, 3, color=self.colors["yellow"], thickness=1)
+        cv2.circle(self.image_rgb, finger, 3, color=self.colors["red"], thickness=1)
+        return finger
+
+    def get_points_on_vertical(self, contour_index):
+        m = -1 / self.get_rotation(contour_index)
+        center = self.get_center_on_image(contour_index)
+        cx, cy = center
         rows, cols = self.image_rgb.shape[:2]
-        [vx, vy, x, y] = cv2.fitLine(self.contours[contour_index], cv2.cv.CV_DIST_L2, 0, 0.01, 0.01)
         # First point
         x1 = 0
-        y1 = int((-x * vy / vx) + y)
+        y1 = int(cy - cx * m)
         # Second point
         x2 = cols - 1
-        y2 = int(((cols - x) * vy / vx) + y)
+        y2 = int(cy + (x2 - cx) * m)
 
-        return x1, y1, x2, y2
+        angle_rad = np.arctan(m)
+        angle_deg = angle_rad * (180 / np.pi)
+
+        return center, x1, x2, y1, y2, angle_deg
+
+    def intersect_line_with_contour(self, line_start, line_end, contour_index):
+        contour_pixels = np.zeros(self.image_rgb.shape[0:2])
+        line_pixels = np.zeros(self.image_rgb.shape[0:2])
+        debug = np.zeros(self.image_rgb.shape[0:2])
+
+        cv2.drawContours(contour_pixels, self.contours, contour_index, 1)
+        cv2.drawContours(debug, self.contours, contour_index, 1)
+        cv2.line(line_pixels, line_start, line_end, 1, thickness=2)
+        cv2.line(debug, line_start, line_end, 1, thickness=2)
+
+        intersection = np.logical_and(contour_pixels, line_pixels)
+
+        intersection_x = int(np.average(np.where(intersection)[1]))
+        intersection_y = int(np.average(np.where(intersection)[0]))
+
+        cv2.circle(debug, (intersection_x, intersection_y), 5, color=1, thickness=1)
+
+        return intersection_x, intersection_y
+
+    def get_rotation(self, contour_index):
+        [vx, vy, x, y] = cv2.fitLine(self.contours[contour_index], cv2.cv.CV_DIST_L2, 0, 0.01, 0.01)
+
+        return vy / vx
 
     def get_contours(self):
         # Only pay attention to objects nearer/darker than ... Else --> 0 (ignore, is ground)
@@ -142,12 +188,14 @@ class Detector:
         # drawContours(image, contours, contourIdx, color, thickness)
         cv2.drawContours(image_show, self.contours, -1, (0, 255, 255), 1)
         for corner in corners:
-            cv2.circle(image_show, corner, 1, color=(255, 0, 0), thickness=1)
+            cv2.circle(image_show, corner, 1, color=self.colors["blue"], thickness=1)
         self.debug_image(image_show, "Useful Contours")
 
     def convert_img_msg(self, img_msg):
         # Convert ros image message to numpy array
         float_image = self.cv_bridge.imgmsg_to_cv2(img_msg, "32FC1")
+
+        float_image = np.rot90(np.rot90(float_image))
 
         # Adjust Image
         float_image[float_image < 0.01] = self.settings["camera_thresh"]
@@ -176,3 +224,7 @@ def show_image(image, window_name):
     cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
     cv2.resizeWindow(window_name, image.shape[1] * 4, image.shape[0] * 4)
     cv2.imshow(window_name, image)  # Show image
+
+
+def get_distance(point_1, point2):
+    return np.sqrt(np.power(point_1[0] - point2[0], 2) + np.power(point_1[1] - point2[1], 2))

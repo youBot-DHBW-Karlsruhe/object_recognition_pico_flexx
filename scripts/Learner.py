@@ -19,7 +19,7 @@ class Learner(Detector):
         self.state = "start"
 
         self.object_contour = None
-        self.object_angle = None
+        self.object_gripper_expanse = None
         self.object_center = None
 
     def learn_objects(self):
@@ -59,11 +59,10 @@ class Learner(Detector):
                 if self.pressed_key == ord(self.colors.keys()[contour_index][0]):
                     # Saving object details
                     self.object_contour = contour
-                    self.object_angle = self.get_contour_angle_on_image(contour_index)
-                    self.object_center = self.get_center_on_image(contour_index)
+                    # self.object_gripper_expanse = self.get_initial_gripper_expanse(contour_index)
 
                     # Inform user
-                    rospy.loginfo("Tracking the " + self.colors.keys()[contour_index] + " object.")
+                    rospy.loginfo("Tracking the selected object (green).")
                     rospy.loginfo("Do you want to save it? (y/n)")
                     self.state = "track_object"
 
@@ -72,11 +71,10 @@ class Learner(Detector):
 
         if contour_index is not None:
             # Show best result
-            print("Difference:", difference)
+            # print("Difference:", difference)
 
             self.draw_contour(contour_index)
-            self.get_contour_angle_on_image(contour_index)
-            self.get_center_on_image(contour_index)
+            # self.get_gripper_parameters(contour_index)
 
         # Get desired action (save/cancel)
         self.show_image_wait("Learner")
@@ -91,7 +89,7 @@ class Learner(Detector):
         name = raw_input("Please enter a name for the object...")
         # Saving object
         rospy.loginfo("Saving object under name '" + name + "'...")
-        self.object_manager.save_object(name, self.object_contour, self.object_angle, self.object_center)
+        self.object_manager.save_object(name, self.object_contour, self.object_gripper_expanse, self.object_center)
         # Back to start
         self.state = "start"
 

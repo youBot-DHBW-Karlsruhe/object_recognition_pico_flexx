@@ -35,12 +35,11 @@ class Recognizer(Detector):
             # Show best result
             print("Difference for", obj["name"], ":", difference)
 
-            self.draw_contour(contour_index)
-            angle = self.get_contour_angle_on_image(contour_index)
-            center = self.get_center_on_image(contour_index)
+            # self.draw_contour(contour_index)
+            midpoint, angle, distance = self.get_gripper_parameters(contour_index)
 
             font = cv2.FONT_HERSHEY_SIMPLEX
-            cv2.putText(self.image_rgb, obj["name"], center, font, 0.5, self.colors["pink"])
+            cv2.putText(self.image_rgb, obj["name"], midpoint, font, 0.5, self.colors["pink"])
 
             # print("Angle in scene", angle)
 
