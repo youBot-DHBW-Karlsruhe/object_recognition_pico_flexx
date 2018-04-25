@@ -1,5 +1,5 @@
 {
-  "debugging": true,
+  "debugging": false,
   "objects": "../objects/objects.json",
   "camera_max": 0.25,
   "camera_min": 0.15,

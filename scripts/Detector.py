@@ -35,7 +35,7 @@ class Detector:
         self.contours = None
 
         rospy.loginfo("To enable/disable debugging images, press D")
-        self.debugging = True
+        self.debugging = self.settings["debugging"]
 
     def callback(self, img_msg):
         # Prevent running multiple callbacks at once
