@@ -3,5 +3,5 @@
   "objects": "../objects/objects.json",
   "camera_max": 0.25,
   "camera_min": 0.15,
-  "camera_thresh": 0.215
+  "camera_thresh": 0.217
 }
