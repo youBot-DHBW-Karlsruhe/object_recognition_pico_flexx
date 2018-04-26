@@ -1,0 +1,8 @@
+<launch>
+
+    <!-- Launch Pico Flexx driver -->
+    <include file="$(find object_recognition_pico_flexx)/launch/pico_flex_driver.launch"/>
+
+    <node name="Learner" pkg="object_recognition_pico_flexx" type="Learner.py"/>
+
+</launch>
