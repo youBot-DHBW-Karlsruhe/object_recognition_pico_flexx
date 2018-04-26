@@ -24,7 +24,7 @@ class Detector:
         self.object_manager = ObjectManager(self.settings["objects"])
 
         self.timestamp_last_call = time.time()
-        self.loop_method = None
+        self.state = None
         self.pressed_key = -1
 
         self.colors = {"blue": (255, 0, 0), "green": (0, 255, 0), "red": (0, 0, 255), "yellow": (0, 255, 255),
@@ -44,7 +44,7 @@ class Detector:
 
             self.convert_img_msg(img_msg)
             self.get_contours()
-            self.loop_method()
+            self.state()
 
             # Detect user shutdown
             if self.pressed_key == 27:  # 27 = Escape key
@@ -54,17 +54,16 @@ class Detector:
                 self.debugging = not self.debugging
                 rospy.loginfo("Debugging: " + str(self.debugging))
 
-    def find_matching_contour(self, contour_object):
-        smallest_difference = 0.2
-        index_best = None
+    def find_matching_contours(self, contour_object):
+        biggest_difference = 0.2
+        matching_contours = {}
 
-        for index, contour_scene in enumerate(self.contours):
-            difference = cv2.matchShapes(contour_scene, contour_object, 1, 0.0)
-            if difference < smallest_difference:
-                smallest_difference = difference
-                index_best = index
+        for index, contour_in_scene in enumerate(self.contours):
+            difference = cv2.matchShapes(contour_in_scene, contour_object, 1, 0.0)
+            if difference < biggest_difference:
+                matching_contours[index] = difference
 
-        return index_best, smallest_difference
+        return matching_contours
 
     def get_center_on_image(self, contour_index):
         # noinspection PyPep8Naming
@@ -144,9 +143,7 @@ class Detector:
         return vy / vx
 
     def get_contours(self):
-        # Only pay attention to objects nearer/darker than ... Else --> 0 (ignore, is ground)
-
-        # Delete obstacles further away than ...
+        # Delete areas further away than ...
         thresh = (self.settings["camera_thresh"] - self.settings["camera_min"]) * 255 / \
                  (self.settings["camera_max"] - self.settings["camera_min"])
 
@@ -156,11 +153,6 @@ class Detector:
                                           cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5)))
 
         self.debug_image(prepared_image, "Prepared Image")
-
-        # Prepare image edges
-        # edges = cv2.morphologyEx(image, cv2.MORPH_GRADIENT, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5)))
-        # if show:
-        #     show_image(edges, "Edges")
 
         # Find Contours
         contours = cv2.findContours(prepared_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0]
@@ -194,8 +186,6 @@ class Detector:
     def convert_img_msg(self, img_msg):
         # Convert ros image message to numpy array
         float_image = self.cv_bridge.imgmsg_to_cv2(img_msg, "32FC1")
-
-        float_image = np.rot90(np.rot90(float_image))
 
         # Adjust Image
         float_image[float_image < 0.01] = self.settings["camera_thresh"]
