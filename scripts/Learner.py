@@ -14,38 +14,19 @@ class Learner(Detector):
 
     def __init__(self):
         Detector.__init__(self)
-        self.loop_method = self.learn_objects
-
-        self.state = "start"
+        self.state = self.init
 
         self.object_contour = None
         self.object_gripper_expanse = None
         self.object_center = None
 
-    def learn_objects(self):
-        if self.state == "start":
-            self.start()
-
-        elif self.state == "find_objects":
-            self.find_objects()
-
-        elif self.state == "track_object":
-            self.track_object()
-
-        elif self.state == "save_object":
-            self.save_object()
-
-        else:
-            rospy.logerr("Unknown learner state! Shutting down...")
-            rospy.signal_shutdown("Unknown state")
-
-    def start(self):
+    def init(self):
         rospy.loginfo("Press any of the following buttons to save the respective object:")
         rospy.loginfo(
             " ".join(["'" + color_name[0] + "'" + " for " + color_name + ";" for color_name in self.colors.keys()]))
-        self.state = "find_objects"
+        self.state = self.select_object
 
-    def find_objects(self):
+    def select_object(self):
         # Show colored contours
         for contour_index, contour in enumerate(self.contours):
             if contour_index < len(self.colors):
@@ -64,25 +45,28 @@ class Learner(Detector):
                     # Inform user
                     rospy.loginfo("Tracking the selected object.")
                     rospy.loginfo("Do you want to save it? (y/n)")
-                    self.state = "track_object"
+                    self.state = self.track_object
 
     def track_object(self):
-        contour_index, difference = self.find_matching_contour(self.object_contour)
+        matching_contours = self.find_matching_contours(self.object_contour)
+        if len(matching_contours) > 0:
+            best_match = min(matching_contours.items(), key=lambda x: x[1])
 
-        if contour_index is not None:
-            # Show best result
-            # print("Difference:", difference)
+            if best_match[1] < 0.2:
+                contour_index = best_match[0]
+                # Show best result
+                # print("Difference:", difference)
 
-            self.draw_contour(contour_index)
-            # self.get_gripper_parameters(contour_index)
+                self.draw_contour(contour_index)
+                self.get_gripper_parameters(contour_index)
 
         # Get desired action (save/cancel)
         self.show_image_wait("Learner")
 
         if self.pressed_key == ord("y"):
-            self.state = "save_object"
+            self.state = self.save_object
         if self.pressed_key == ord("n"):
-            self.state = "start"
+            self.state = self.init
 
     def save_object(self):
         # Getting object name
@@ -91,7 +75,7 @@ class Learner(Detector):
         rospy.loginfo("Saving object under name '" + name + "'...")
         self.object_manager.save_object(name, self.object_contour, self.object_gripper_expanse, self.object_center)
         # Back to start
-        self.state = "start"
+        self.state = self.init
 
 
 def main():
