@@ -48,17 +48,16 @@ class Learner(Detector):
                     self.state = self.track_object
 
     def track_object(self):
-        matching_contours = self.find_matching_contours(self.object_contour)
+        matching_contours = self.get_matching_contours(self.object_contour)
         if len(matching_contours) > 0:
             best_match = min(matching_contours.items(), key=lambda x: x[1])
 
-            if best_match[1] < 0.2:
-                contour_index = best_match[0]
-                # Show best result
-                # print("Difference:", difference)
+            contour_index = best_match[0]
+            # Show best result
+            # print("Difference:", difference)
 
-                self.draw_contour(contour_index)
-                self.get_gripper_parameters(contour_index)
+            self.draw_contour(contour_index)
+            self.get_gripper_parameters(contour_index)
 
         # Get desired action (save/cancel)
         self.show_image_wait("Learner")

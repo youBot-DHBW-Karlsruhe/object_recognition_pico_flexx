@@ -54,7 +54,7 @@ class Detector:
                 self.debugging = not self.debugging
                 rospy.loginfo("Debugging: " + str(self.debugging))
 
-    def find_matching_contours(self, contour_object):
+    def get_matching_contours(self, contour_object):
         biggest_difference = 0.2
         matching_contours = {}
 
