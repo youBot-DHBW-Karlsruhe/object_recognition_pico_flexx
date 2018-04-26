@@ -3,7 +3,7 @@
     <!-- Launch Pico Flexx driver -->
     <include file="$(find object_recognition_pico_flexx)/launch/pico_flex_driver.launch"/>
 
-    <!-- Launch Learner-->
-    <node name="Learner" pkg="object_recognition_pico_flexx" type="Learner.py"/>
+    <!-- Launch Recognizer-->
+    <node name="Recognizer" pkg="object_recognition_pico_flexx" type="Recognizer.py"/>
 
 </launch>
