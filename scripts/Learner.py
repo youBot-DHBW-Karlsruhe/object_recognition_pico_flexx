@@ -62,7 +62,7 @@ class Learner(Detector):
                     # self.object_gripper_expanse = self.get_initial_gripper_expanse(contour_index)
 
                     # Inform user
-                    rospy.loginfo("Tracking the selected object (green).")
+                    rospy.loginfo("Tracking the selected object.")
                     rospy.loginfo("Do you want to save it? (y/n)")
                     self.state = "track_object"
 
