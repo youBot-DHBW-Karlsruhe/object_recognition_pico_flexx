@@ -14,7 +14,7 @@ class Recognizer(Detector):
 
     def __init__(self):
         Detector.__init__(self)
-        self.loop_method = self.recognize_objects
+        self.state = self.recognize_objects
 
         self.objects = self.object_manager.load_objects()
 
@@ -23,9 +23,9 @@ class Recognizer(Detector):
         recognized_contours = {}
 
         for obj in self.objects:
-            contour_index, difference = self.find_matching_contour(obj["contour"])
+            matching_contours = self.find_matching_contours(obj["contour"])
 
-            if contour_index is not None:
+            for contour_index, difference in matching_contours.iteritems():
                 # Only assign object to a contour if it is a better match for that contour
                 if contour_index not in recognized_contours or recognized_contours[contour_index] > difference:
                     recognized_contours[contour_index] = (obj, difference)
