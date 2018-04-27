@@ -27,7 +27,7 @@ class Recognizer(Detector):
 
             for contour_index, difference in matching_contours.iteritems():
                 # Only assign object to a contour if it is a better match for that contour
-                if contour_index not in recognized_contours or difference < recognized_contours[contour_index]:
+                if contour_index not in recognized_contours or difference < recognized_contours[contour_index][1]:
                     recognized_contours[contour_index] = (obj, difference)
 
         # Visualize found objects
@@ -35,8 +35,9 @@ class Recognizer(Detector):
             # Show best result
             print("Difference for", obj["name"], ":", difference)
 
-            # self.draw_contour(contour_index)
-            midpoint, angle, distance = self.get_gripper_parameters(contour_index)
+            self.draw_contour(contour_index)
+            midpoint = self.get_center_on_image(contour_index)
+            # midpoint, angle, distance = self.get_gripper_parameters(contour_index)
 
             font = cv2.FONT_HERSHEY_SIMPLEX
             cv2.putText(self.image_rgb, obj["name"], midpoint, font, 0.5, self.colors["pink"])
