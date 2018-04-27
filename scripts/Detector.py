@@ -16,7 +16,7 @@ roslib.load_manifest('object_recognition_pico_flexx')
 class Detector:
 
     def __init__(self):
-        self.image_sub = rospy.Subscriber("/royale_camera_driver/depth_image", Image, self.callback)
+        rospy.Subscriber("/royale_camera_driver/depth_image", Image, self.callback)
         self.cv_bridge = CvBridge()
 
         # print("OpenCV version: {0}".format(cv2.__version__))  # 2.4.8
