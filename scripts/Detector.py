@@ -121,19 +121,21 @@ class Detector:
     def intersect_line_with_contour(self, line_start, line_end, contour_index):
         contour_pixels = np.zeros(self.image_rgb.shape[0:2])
         line_pixels = np.zeros(self.image_rgb.shape[0:2])
-        debug = np.zeros(self.image_rgb.shape[0:2])
 
         cv2.drawContours(contour_pixels, self.contours, contour_index, 1)
-        cv2.drawContours(debug, self.contours, contour_index, 1)
         cv2.line(line_pixels, line_start, line_end, 1, thickness=2)
-        cv2.line(debug, line_start, line_end, 1, thickness=2)
 
         intersection = np.logical_and(contour_pixels, line_pixels)
 
         intersection_x = int(np.average(np.where(intersection)[1]))
         intersection_y = int(np.average(np.where(intersection)[0]))
 
-        cv2.circle(debug, (intersection_x, intersection_y), 5, color=1, thickness=1)
+        # debug = np.zeros(self.image_rgb.shape[0:2]).astype("u1")
+        # debug = cv2.cvtColor(debug, cv2.COLOR_GRAY2RGB)
+        # cv2.drawContours(debug, self.contours, contour_index, self.colors["yellow"])
+        # cv2.line(debug, line_start, line_end, self.colors["blue"], thickness=2)
+        # cv2.circle(debug, (intersection_x, intersection_y), 5, color=self.colors["red"], thickness=1)
+        # show_image(debug, "Intersection")
 
         return intersection_x, intersection_y
 
