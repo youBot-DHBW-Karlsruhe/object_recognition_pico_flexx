@@ -4,6 +4,10 @@ from __future__ import print_function
 import cv2
 import roslib
 import rospy
+import sensor_msgs.point_cloud2 as pc2
+from geometry_msgs.msg import Point
+from geometry_msgs.msg import PointStamped
+from sensor_msgs.msg import PointCloud2
 
 from Detector import Detector
 
@@ -18,6 +22,11 @@ class Recognizer(Detector):
 
         self.objects = self.object_manager.load_objects()
 
+        rospy.Subscriber("/royale_camera_driver/point_cloud", PointCloud2, self.save_point_cloud)
+        self.point_cloud = None
+
+        self.pub_point = rospy.Publisher("/object_recognition/point", PointStamped, queue_size=10)
+
     def recognize_objects(self):
         # Find best matching contour for each object
         recognized_contours = {}
@@ -30,37 +39,43 @@ class Recognizer(Detector):
                 if contour_index not in recognized_contours or difference < recognized_contours[contour_index][1]:
                     recognized_contours[contour_index] = (obj, difference)
 
-        # Visualize found objects
-        for contour_index, (obj, difference) in recognized_contours.iteritems():
-            # Show best result
-            print("Difference for", obj["name"], ":", difference)
+        if recognized_contours:
+            self.visualize_recognitions(recognized_contours)
 
-            self.draw_contour(contour_index)
-            midpoint = self.get_center_on_image(contour_index)
-            # midpoint, angle, distance = self.get_gripper_parameters(contour_index)
+            best_match = min(recognized_contours.items(), key=lambda x: x[1][1])
+            self.publish_match(best_match)
 
-            font = cv2.FONT_HERSHEY_SIMPLEX
-            cv2.putText(self.image_rgb, obj["name"], midpoint, font, 0.5, self.colors["pink"])
-
-            # print("Angle in scene", angle)
-
+        self.publish_match(None)
         self.show_image_wait("Recognized Objects")
 
-        # (rows, cols) = cv_image.shape
-        # if cols > 60 and rows > 60:
-        #     cv2.circle(cv_image, (50, 50), 10, 255)
+    def visualize_recognitions(self, recognized_contours):
 
-        # cv2.imshow("Object Recognition", cv_image)
-        # cv2.waitKey(3)
+        # Visualize found objects
+        for contour_index, (obj, difference) in recognized_contours.iteritems():
+            self.draw_contour(contour_index)
+            center = self.get_center_on_image(contour_index)
 
-        # self.image_pub.publish(self.cv_bridge.cv2_to_imgmsg(cv_image, "32FC1"))
+            cv2.putText(self.image_rgb, obj["name"], center, cv2.FONT_HERSHEY_SIMPLEX, 0.5, self.colors["pink"])
 
-        #
-        # hello_str = "hello world %s" % rospy.get_time()
-        # rospy.loginfo(hello_str)
-        # self.pub.publish(hello_str)
+            print("Difference for", obj["name"], ":", difference)
 
-        # TODO: publish recognized_objects
+    def publish_match(self, match):
+        contour_index, (obj, difference) = match
+        midpoint, angle, distance = self.get_gripper_parameters(contour_index)
+
+        point_stamped = PointStamped(self.point_cloud.header, self.get_3d_point(midpoint))
+
+        self.pub_point.publish(point_stamped)
+
+    def save_point_cloud(self, point_cloud):
+        self.point_cloud = point_cloud
+
+    def get_3d_point(self, point_2d):
+        u, v = point_2d
+        point_3d = list(pc2.read_points(self.point_cloud, uvs=[(u, v)]))[0]
+        x, y, z = point_3d
+
+        return Point(x, y, z)
 
 
 def main():
