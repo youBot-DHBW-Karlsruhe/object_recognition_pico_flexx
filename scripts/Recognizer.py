@@ -45,7 +45,6 @@ class Recognizer(Detector):
             best_match = min(recognized_contours.items(), key=lambda x: x[1][1])
             self.publish_match(best_match)
 
-        self.publish_match(None)
         self.show_image_wait("Recognized Objects")
 
     def visualize_recognitions(self, recognized_contours):
