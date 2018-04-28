@@ -76,30 +76,28 @@ class Detector:
         return cx, cy
 
     def get_object_parameters(self, contour_index):
-        center, x1, x2, y1, y2, rotation = self.get_points_on_vertical(contour_index)
+        center, end_point1, end_point2, rotation = self.get_points_on_vertical(contour_index)
 
-        gripper_finger1 = self.get_finger_position(center, contour_index, x1, y1)
-        gripper_finger2 = self.get_finger_position(center, contour_index, x2, y2)
+        finger_point1 = self.get_finger_position(center, end_point1, contour_index)
+        finger_point2 = self.get_finger_position(center, end_point2, contour_index)
 
-        width = get_distance(gripper_finger1, gripper_finger2)
-
-        midpoint_x = int(np.average([gripper_finger1[0], gripper_finger2[0]]))
-        midpoint_y = int(np.average([gripper_finger1[1], gripper_finger2[1]]))
+        midpoint_x = int(np.average([finger_point1[0], finger_point2[0]]))
+        midpoint_y = int(np.average([finger_point1[1], finger_point2[1]]))
         midpoint = (midpoint_x, midpoint_y)
 
         cv2.circle(self.image_rgb, midpoint, 1, self.colors["red"])
 
-        return midpoint, rotation, width
+        return midpoint, finger_point1, finger_point2, rotation
 
-    def get_finger_position(self, center, contour_index, x1, y1):
-        point = (x1, y1)
-        intersection = self.intersect_line_with_contour(center, point, contour_index)
-        finger_x = int(intersection[0] + (x1 - intersection[0]) / get_distance(intersection, point) * 4)
-        finger_y = int(intersection[1] + (y1 - intersection[1]) / get_distance(intersection, point) * 4)
-        finger = (finger_x, finger_y)
+    def get_finger_position(self, center, direction_point, contour_index):
+        intersection = self.intersect_line_with_contour(center, direction_point, contour_index)
+        direction_vector_length = self.get_distance(intersection, direction_point)
+        finger_x = int(intersection[0] + (direction_point[0] - intersection[0]) / direction_vector_length * 0)
+        finger_y = int(intersection[1] + (direction_point[0] - intersection[1]) / direction_vector_length * 0)
+        finger_point = (finger_x, finger_y)
         # cv2.circle(self.image_rgb, intersection, 3, color=self.colors["yellow"], thickness=1)
-        cv2.circle(self.image_rgb, finger, 3, color=self.colors["red"], thickness=1)
-        return finger
+        cv2.circle(self.image_rgb, finger_point, 3, color=self.colors["red"], thickness=1)
+        return finger_point
 
     def get_points_on_vertical(self, contour_index):
         m = -1 / self.get_rotation(contour_index)
@@ -116,7 +114,7 @@ class Detector:
         angle_rad = np.arctan(m)
         angle_deg = angle_rad * (180 / np.pi)
 
-        return center, x1, x2, y1, y2, angle_deg
+        return center, (x1, y1), (x2, y2), angle_deg
 
     def intersect_line_with_contour(self, line_start, line_end, contour_index):
         contour_pixels = np.zeros(self.image_rgb.shape[0:2])
@@ -211,12 +209,12 @@ class Detector:
     def draw_contour(self, contour_index, color_index=2):
         cv2.drawContours(self.image_rgb, self.contours, contour_index, self.colors.values()[color_index], 1)
 
+    @staticmethod
+    def get_distance(point_1, point2):
+        return np.sqrt(np.power(point_1[0] - point2[0], 2) + np.power(point_1[1] - point2[1], 2))
+
 
 def show_image(image, window_name):
     cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
     cv2.resizeWindow(window_name, image.shape[1] * 4, image.shape[0] * 4)
     cv2.imshow(window_name, image)  # Show image
-
-
-def get_distance(point_1, point2):
-    return np.sqrt(np.power(point_1[0] - point2[0], 2) + np.power(point_1[1] - point2[1], 2))
