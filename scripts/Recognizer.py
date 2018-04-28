@@ -5,6 +5,9 @@ import cv2
 import roslib
 import rospy
 import sensor_msgs.point_cloud2 as pc2
+from std_msgs.msg import String
+from std_msgs.msg import Float32
+from std_msgs.msg import Int8
 from geometry_msgs.msg import Point
 from geometry_msgs.msg import PointStamped
 from sensor_msgs.msg import PointCloud2
@@ -27,6 +30,7 @@ class Recognizer(Detector):
         self.point_cloud = None
 
         self.pub_position = rospy.Publisher("/object_recognition/point", PointStamped, queue_size=10)
+        self.pub_object = rospy.Publisher("/object_recognition/recognized_object", RecognizedObject, queue_size=10)
 
     def recognize_objects(self):
         # Find best matching contour for each object
@@ -61,23 +65,28 @@ class Recognizer(Detector):
 
     def publish_match(self, match):
         contour_index, (obj, difference) = match
-        midpoint, rotation, width = self.get_object_parameters(contour_index)
+        midpoint, finger_point1, finger_point2, rotation = self.get_object_parameters(contour_index)
 
-        position = self.get_3d_point(midpoint)
+        [midpoint, finger_point1, finger_point2] = self.get_3d_points([midpoint, finger_point1, finger_point2])
+        width = self.get_distance((finger_point1.x, finger_point1.y), (finger_point2.x, finger_point2.y))
 
-        self.pub_position.publish(PointStamped(self.point_cloud.header, position))
-
-
+        self.pub_position.publish(PointStamped(self.point_cloud.header, midpoint))
+        self.pub_object.publish(RecognizedObject(
+            self.point_cloud.header,
+            String(obj["name"]),
+            Float32(width),
+            Int8(rotation)
+        ))
 
     def save_point_cloud(self, point_cloud):
         self.point_cloud = point_cloud
 
-    def get_3d_point(self, point_2d):
-        u, v = point_2d
-        point_3d = list(pc2.read_points(self.point_cloud, uvs=[(u, v)]))[0]
-        x, y, z = point_3d
-
-        return Point(x, y, z)
+    def get_3d_points(self, points_2d):
+        points_3d = []
+        for point_3d in list(pc2.read_points(self.point_cloud, uvs=points_2d)):
+            x, y, z = point_3d
+            points_3d.append(Point(x, y, z))
+        return points_3d
 
 
 def main():
