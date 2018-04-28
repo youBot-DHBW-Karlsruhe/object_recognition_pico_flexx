@@ -74,6 +74,7 @@ class Recognizer(Detector):
         self.pub_object.publish(RecognizedObject(
             self.point_cloud.header,
             String(obj["name"]),
+            midpoint,
             Float32(width),
             Int8(rotation)
         ))
