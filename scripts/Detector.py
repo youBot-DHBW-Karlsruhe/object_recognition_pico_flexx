@@ -75,13 +75,13 @@ class Detector:
 
         return cx, cy
 
-    def get_gripper_parameters(self, contour_index):
-        center, x1, x2, y1, y2, angle = self.get_points_on_vertical(contour_index)
+    def get_object_parameters(self, contour_index):
+        center, x1, x2, y1, y2, rotation = self.get_points_on_vertical(contour_index)
 
         gripper_finger1 = self.get_finger_position(center, contour_index, x1, y1)
         gripper_finger2 = self.get_finger_position(center, contour_index, x2, y2)
 
-        distance = get_distance(gripper_finger1, gripper_finger2)
+        width = get_distance(gripper_finger1, gripper_finger2)
 
         midpoint_x = int(np.average([gripper_finger1[0], gripper_finger2[0]]))
         midpoint_y = int(np.average([gripper_finger1[1], gripper_finger2[1]]))
@@ -89,7 +89,7 @@ class Detector:
 
         cv2.circle(self.image_rgb, midpoint, 1, self.colors["red"])
 
-        return midpoint, angle, distance
+        return midpoint, rotation, width
 
     def get_finger_position(self, center, contour_index, x1, y1):
         point = (x1, y1)

@@ -57,7 +57,7 @@ class Learner(Detector):
             # print("Difference:", difference)
 
             self.draw_contour(contour_index)
-            self.get_gripper_parameters(contour_index)
+            self.get_object_parameters(contour_index)
 
         # Get desired action (save/cancel)
         self.show_image_wait("Learner")

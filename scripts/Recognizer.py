@@ -8,6 +8,7 @@ import sensor_msgs.point_cloud2 as pc2
 from geometry_msgs.msg import Point
 from geometry_msgs.msg import PointStamped
 from sensor_msgs.msg import PointCloud2
+from object_recognition_pico_flexx.msg import RecognizedObject
 
 from Detector import Detector
 
@@ -25,7 +26,7 @@ class Recognizer(Detector):
         rospy.Subscriber("/royale_camera_driver/point_cloud", PointCloud2, self.save_point_cloud)
         self.point_cloud = None
 
-        self.pub_point = rospy.Publisher("/object_recognition/point", PointStamped, queue_size=10)
+        self.pub_position = rospy.Publisher("/object_recognition/point", PointStamped, queue_size=10)
 
     def recognize_objects(self):
         # Find best matching contour for each object
@@ -60,11 +61,13 @@ class Recognizer(Detector):
 
     def publish_match(self, match):
         contour_index, (obj, difference) = match
-        midpoint, angle, distance = self.get_gripper_parameters(contour_index)
+        midpoint, rotation, width = self.get_object_parameters(contour_index)
 
-        point_stamped = PointStamped(self.point_cloud.header, self.get_3d_point(midpoint))
+        position = self.get_3d_point(midpoint)
 
-        self.pub_point.publish(point_stamped)
+        self.pub_position.publish(PointStamped(self.point_cloud.header, position))
+
+
 
     def save_point_cloud(self, point_cloud):
         self.point_cloud = point_cloud
