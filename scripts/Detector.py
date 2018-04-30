@@ -92,11 +92,11 @@ class Detector:
     def get_finger_position(self, center, direction_point, contour_index):
         intersection = self.intersect_line_with_contour(center, direction_point, contour_index)
         direction_vector_length = self.get_distance(intersection, direction_point)
-        finger_x = int(intersection[0] + (direction_point[0] - intersection[0]) / direction_vector_length * 0)
-        finger_y = int(intersection[1] + (direction_point[0] - intersection[1]) / direction_vector_length * 0)
+        finger_x = int(intersection[0] - ((direction_point[0] - intersection[0]) / direction_vector_length) * 1)
+        finger_y = int(intersection[1] - ((direction_point[1] - intersection[1]) / direction_vector_length) * 1)
         finger_point = (finger_x, finger_y)
         # cv2.circle(self.image_rgb, intersection, 3, color=self.colors["yellow"], thickness=1)
-        cv2.circle(self.image_rgb, finger_point, 3, color=self.colors["red"], thickness=1)
+        cv2.circle(self.image_rgb, finger_point, 4, color=self.colors["red"], thickness=1)
         return finger_point
 
     def get_points_on_vertical(self, contour_index):
