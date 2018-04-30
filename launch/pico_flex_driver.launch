@@ -1,9 +1,14 @@
 <launch>
 
-  <!-- Launch Pico Flexx driver -->
-  <include file="$(find royale_in_ros)/launch/camera_driver.launch" />
+    <!-- Launch Pico Flexx driver -->
+    <include file="$(find royale_in_ros)/launch/camera_driver.launch"/>
 
-  <!-- Set Camera Use Case -->
-  <node name="dynamic_reconfigure_load" pkg="dynamic_reconfigure" type="dynparam" args="load /royale_camera $(find object_recognition_pico_flexx)/parameters/pico_flexx_parameters.yaml" />
+    <!-- Set auto exposure -->
+    <node name="dynamic_reconfigure_load" pkg="dynamic_reconfigure" type="dynparam"
+          args="load /royale_camera $(find object_recognition_pico_flexx)/parameters/pico_flexx_parameters.yaml"/>
+
+    <!-- Transform camera frame to robot frame -->
+    <node pkg="tf" type="static_transform_publisher" name="camera_to_robot_tf"
+          args="-0.02 0.0 0.005 0.0 1.0 0.0 1.0 arm_link_5 royale_camera_link 10"/>
 
 </launch>
