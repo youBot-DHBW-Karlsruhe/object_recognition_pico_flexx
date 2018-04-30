@@ -2,18 +2,12 @@
 <package format="2">
   <name>object_recognition_pico_flexx</name>
   <version>0.0.1</version>
-  <description>Localizing and Classifying objects in the view field of a pmd pico flexx camera</description>
-
-  <maintainer email="dominik.wunderlich@gmx.de">dominik</maintainer>
-
-
   <license>Apache-2.0</license>
-
-
+  <description>Localizing and Classifying objects in the view field of a pmd pico flexx camera</description>
   <url type="repository">https://github.com/youBot-DHBW-Karlsruhe/object_recognition_pico_flexx</url>
 
+  <maintainer email="dominik.wunderlich@gmx.de">dominik</maintainer>
   <author email="dominik.wunderlich@gmx.de">dominik</author>
-
 
   <!-- The *depend tags are used to specify dependencies -->
   <!-- Dependencies can be catkin packages or system dependencies -->
@@ -60,5 +54,7 @@
   <build_depend>geometry_msgs</build_depend>
   <build_export_depend>geometry_msgs</build_export_depend>
   <exec_depend>geometry_msgs</exec_depend>
+
+  <exec_depend>royale_in_ros</exec_depend>
 
 </package>
