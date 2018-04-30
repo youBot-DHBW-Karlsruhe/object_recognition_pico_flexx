@@ -61,4 +61,6 @@
   <build_export_depend>geometry_msgs</build_export_depend>
   <exec_depend>geometry_msgs</exec_depend>
 
+  <exec_depend>royale_in_ros</exec_depend>
+
 </package>
