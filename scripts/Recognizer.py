@@ -5,13 +5,10 @@ import cv2
 import roslib
 import rospy
 import sensor_msgs.point_cloud2 as pc2
-from std_msgs.msg import String
-from std_msgs.msg import Float32
-from std_msgs.msg import Int8
 from geometry_msgs.msg import Point
 from geometry_msgs.msg import PointStamped
-from sensor_msgs.msg import PointCloud2
 from object_recognition_pico_flexx.msg import RecognizedObject
+from sensor_msgs.msg import PointCloud2
 
 from Detector import Detector
 
@@ -61,7 +58,7 @@ class Recognizer(Detector):
 
             cv2.putText(self.image_rgb, obj["name"], center, cv2.FONT_HERSHEY_SIMPLEX, 0.5, self.colors["pink"])
 
-            print("Difference for", obj["name"], ":", difference)
+            print("Found object:", obj["name"])
 
     def publish_match(self, match):
         contour_index, (obj, difference) = match
@@ -73,10 +70,10 @@ class Recognizer(Detector):
         self.pub_position.publish(PointStamped(self.point_cloud.header, midpoint))
         self.pub_object.publish(RecognizedObject(
             self.point_cloud.header,
-            String(obj["name"]),
+            str(obj["name"]),
             midpoint,
-            Float32(width),
-            Int8(rotation)
+            width,
+            int(rotation)
         ))
 
     def save_point_cloud(self, point_cloud):
