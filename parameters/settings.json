@@ -3,5 +3,7 @@
   "objects": "../objects/objects.json",
   "camera_max": 0.25,
   "camera_min": 0.15,
-  "camera_thresh": 0.216
+  "camera_thresh": 0.216,
+  "maximal_contour_difference": 0.4,
+  "minimal_contour_length": 45
 }

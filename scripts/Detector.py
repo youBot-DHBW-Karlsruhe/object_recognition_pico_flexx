@@ -55,7 +55,7 @@ class Detector:
                 rospy.loginfo("Debugging: " + str(self.debugging))
 
     def get_matching_contours(self, contour_object):
-        biggest_difference = 0.2
+        biggest_difference = self.settings["maximal_contour_difference"]
         matching_contours = {}
 
         for index, contour_in_scene in enumerate(self.contours):
@@ -163,7 +163,7 @@ class Detector:
         corners = [(2, 2), (2, image_y - 3), (image_x - 3, 2), (image_x - 3, image_y - 3)]
         for contour in contours:
             # Only select contours with more than 40 points
-            if len(contour) > 40:
+            if len(contour) > self.settings["minimal_contour_length"]:
                 in_corner = False
                 # Test if Contour is in one of the corners
                 for point in corners:
