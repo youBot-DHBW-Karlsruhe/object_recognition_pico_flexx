@@ -30,14 +30,14 @@ The node publishes object messages under the topic `/object_recognition/recogniz
 
 ## Configuration
 
-Configuration is done in [parameters/settings.json](parameters/settings.json).
+Configuration is done in [parameters/settings.json](parameters/settings.json). The default values in this file correspond to the youBot object recognition pose descibed in [parameters/ObjectRecognitionPose.md](parameters/ObjectRecognitionPose.md).
 
 `"debugging"`: Do you want to see debugging images?
 `"objects"`: Path to object .json fil
 `"camera_thresh"`: Camera distance to ground. (Float in meters)
 `"camera_max"`: Camera distance to highest object. (Float in meters)
-`"maximal_contour_difference"`: 0.4,
-`"minimal_contour_length"`: 45
+`"maximal_contour_difference"`: Maxiumum difference between contours to be recognized accoridng to Hu-Moments.
+`"minimal_contour_length"`: Miniumum number of a contour's points to be estimated as potential object.
 
 ## Execution
 
