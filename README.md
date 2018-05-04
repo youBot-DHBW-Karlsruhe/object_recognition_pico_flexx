@@ -8,9 +8,13 @@ See the following video for visualization:
 
 [![YouTube Video](https://img.youtube.com/vi/4J9ihnDPLBA/0.jpg)](https://www.youtube.com/watch?v=4J9ihnDPLBA)
 
-## Environment
+## Environment and subscribed topics
+
+For a full environment setup please refer to [this document](https://docs.google.com/document/d/1mHekbqrnkeZCLNHFKreaERwDxS6Y1B2LWokVlte4wV0/edit?usp=sharing).
 
 The node expects depth image messages under the topic `/royale_camera_driver/depth_image` and point_cloud2 messages under the topic `/royale_camera_driver/point_cloud`. These are provided by the official [pmd Royale ROS Wrapper](https://pmdtec.com/picofamily/2018/04/05/ros-support-for-pico-flexx-and-pico-monstar/).
+
+## Published Topic
 
 The node publishes object messages under the topic `/object_recognition/recognized_object`. The message type is defined in [msg/RecognizedObject.msg](msg/RecognizedObject.msg). An example message is shown below:
 
@@ -32,12 +36,17 @@ The node publishes object messages under the topic `/object_recognition/recogniz
 
 Configuration is done in [parameters/settings.json](parameters/settings.json). The default values in this file correspond to the youBot object recognition pose descibed in [parameters/ObjectRecognitionPose.md](parameters/ObjectRecognitionPose.md).
 
-`"debugging"`: Do you want to see debugging images?
-`"objects"`: Path to object .json fil
-`"camera_thresh"`: Camera distance to ground. (Float in meters)
-`"camera_max"`: Camera distance to highest object. (Float in meters)
-`"maximal_contour_difference"`: Maxiumum difference between contours to be recognized accoridng to Hu-Moments.
-`"minimal_contour_length"`: Miniumum number of a contour's points to be estimated as potential object.
+- `"debugging"`: Do you want to see debugging images?
+
+- `"objects"`: Path to object .json fil
+
+- `"camera_thresh"`: Camera distance to ground. (Float in meters)
+
+- `"camera_max"`: Camera distance to highest object. (Float in meters)
+
+- `"maximal_contour_difference"`: Maxiumum difference between contours to be recognized accoridng to Hu-Moments.
+
+- `"minimal_contour_length"`: Miniumum number of a contour's points to be estimated as potential object.
 
 ## Execution
 
